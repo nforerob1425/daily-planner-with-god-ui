@@ -1,6 +1,10 @@
 {
   "ExpandedNodes": [
-    ""
+    "",
+    "\\daily-planner-with-god",
+    "\\daily-planner-with-god\\public",
+    "\\daily-planner-with-god\\src"
   ],
+  "SelectedNode": "\\daily-planner-with-god\\src\\App.vue",
   "PreviewInSolutionExplorer": false
 }
