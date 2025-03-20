@@ -10,6 +10,10 @@ import login from '@/views/login.vue';
 const routes = [
   {
     path: '/',
+    redirect: '/planner', // Redirige a /planner
+  },
+  {
+    path: '/',
     component: MainLayout,
     children: [
       { path: 'account', component: account },

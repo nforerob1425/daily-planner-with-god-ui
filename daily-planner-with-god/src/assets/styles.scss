@@ -1,17 +1,22 @@
+// Variables reutilizables
+$transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+$hover-effect: scale(1.05);
+$box-shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.2);
+
+// Estilos base
 .v-img {
-    flex-shrink: 0; // Evita que la imagen reduzca su tamaño
-    height: 200px !important; // Altura fija para imágenes
-    min-height: 200px !important;
+    flex-shrink: 0;
+    height: 200px !important;
+    min-height: 200px;
 }
 
 .v-row {
-    margin: 0 -4px; // Compensa el padding de las columnas
-
+    margin: 0 -4px;
+    
     .v-col {
-        padding: 4px !important; // Espaciado uniforme
+        padding: 4px !important;
     }
 }
-
 
 .active-item {
     background-color: rgb(var(--v-theme-primary)) !important;
@@ -27,26 +32,16 @@
     min-height: 100%;
     background-color: rgb(var(--v-theme-on-primary)) !important;
     border: 1px solid rgba(0, 0, 0, 0.2);
-    box-shadow: inset 0px 5px 10px rgba(0, 0, 0, 0.2),
-        inset 0px -5px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: inset 0 5px 10px rgba(0, 0, 0, 0.2), 
+                inset 0 -5px 10px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
 }
 
+// Badges y chips
 .year-chip {
     position: absolute;
     top: 10px;
     right: 10px;
-}
-
-
-.card {
-    border-radius: 16px;
-    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-}
-
-.card:hover {
-    transform: scale(1.05);
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
 }
 
 .year-badge {
@@ -63,7 +58,7 @@
     align-items: center;
     justify-content: center;
     font-size: 14px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
 }
 
 .reported-badge {
@@ -73,49 +68,51 @@
     font-weight: bold;
 }
 
-.year-text {
+.year-text, .reported-text {
     color: white;
     font-weight: bold;
 }
 
-.reported-text {
-    color: white;
-    font-weight: bold;
+// Cards
+.card {
+    border-radius: 16px;
+    transition: $transition;
+
+    &:hover {
+        transform: $hover-effect;
+        box-shadow: $box-shadow-hover;
+    }
 }
 
 .custom-card {
+    @extend .card;
     aspect-ratio: 1 / 1;
     position: relative;
-    border-radius: 16px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
     padding: 16px;
     overflow: visible;
-    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-    // Nuevas propiedades
-    min-height: 300px; // Altura mínima base
-    height: 100%; // Ocupar altura completa del contenedor padre
+    min-height: 300px;
+    height: 100%;
     margin: 0 !important;
 
     @media (max-width: 960px) {
         aspect-ratio: unset;
-        min-height: 400px; // Altura menor en tablets
+        min-height: 400px;
     }
 
     @media (max-width: 600px) {
-        min-height: 350px; // Altura para móviles
+        min-height: 350px;
+    }
+
+    &:hover {
+        z-index: 2;
     }
 }
 
-.custom-card:hover {
-    transform: scale(1.05);
-    z-index: 2;
-    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-}
-
-/* Label superior con el nombre del usuario */
+// Elementos posicionados
 .user-label {
     position: absolute;
     top: -20px;
@@ -131,7 +128,6 @@
     text-overflow: ellipsis;
 }
 
-/* Contenedor de fecha */
 .date-container {
     position: absolute;
     top: -35px;
@@ -142,19 +138,17 @@
 .date-circle {
     width: 100px !important;
     height: 100px !important;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
 
     @media (max-width: 600px) {
         width: 80px !important;
         height: 80px !important;
     }
-
-    border-radius: 50%;
-    border: 3px solid white;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    text-align: justify;
 }
 
 .date-text {
@@ -164,52 +158,49 @@
     line-height: 1.2;
 }
 
-/* Título */
+// Textos
 .card-title {
     font-size: clamp(1.5rem, 3vw, 2.8rem);
     margin-top: 40px;
-    line-height: 1.2; // Espaciado entre líneas
-    padding: 0 8px; // Padding lateral para evitar bordes pegados
+    line-height: 1.2;
+    padding: 0 8px;
 
     @media (max-width: 600px) {
-        font-size: 1.8rem; // Tamaño menor en móviles
+        font-size: 1.8rem;
         margin-top: 30px;
     }
 }
 
-/* Versículo (subtítulo adicional) */
 .versicle-text {
     font-size: clamp(1rem, 1.5vw, 1.5rem);
     font-weight: bold;
     text-align: center;
 }
 
-/* Contenido */
 .custom-text {
     font-size: 1rem;
     text-align: justify;
     padding: 10px;
     overflow: auto;
-    max-height: 300px; // Altura máxima antes del scroll
-    flex-grow: 1; // Ocupa espacio disponible
-    width: 100%; // Ancho completo
+    max-height: 300px;
+    flex-grow: 1;
+    width: 100%;
 
-    /* Estilos personalizados para el scroll */
     &::-webkit-scrollbar {
         width: 6px;
-    }
-
-    &::-webkit-scrollbar-track {
-        background: rgba(0, 0, 0, 0.1);
-    }
-
-    &::-webkit-scrollbar-thumb {
-        background-color: rgba(0, 0, 0, 0.3);
-        border-radius: 4px;
+        
+        &-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+        
+        &-thumb {
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+        }
     }
 }
 
-/* Acciones del card */
+// Componentes
 .card-actions {
     position: absolute;
     bottom: 10px;
@@ -224,7 +215,7 @@
 
 .month-section {
     margin-bottom: 40px;
-
+    
     &:last-child {
         margin-bottom: 0;
     }
@@ -257,14 +248,19 @@
     color: #666;
 }
 
-// Ajustes de responsive
+// Responsive
 @media (max-width: 600px) {
     .month-title {
         font-size: 1.5rem !important;
     }
 
     .sticky-header {
-        top: -16px; // Compensar padding del contenedor
+        top: -16px;
+    }
+
+    .close-btn {
+        top: 10px;
+        right: 10px;
     }
 }
 
@@ -272,27 +268,19 @@
     position: fixed;
     top: 20px;
     right: 20px;
-    z-index: 100; /* Mayor que los headers (z-index:10) */
+    z-index: 100;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    transition: opacity 0.3s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease;
     
-    /* Efecto hover */
     &:hover {
-      transform: scale(1.1);
+        transform: scale(1.1);
     }
-    
-    /* Responsive para móviles */
-    @media (max-width: 600px) {
-      top: 10px;
-      right: 10px;
-      size: small;
-    }
-  }
+}
 
-  .v-dialog--fullscreen {
+.v-dialog--fullscreen {
     overflow: visible !important;
-  }
+}
 
-  .sticky-header ~ .close-btn {
+.sticky-header ~ .close-btn {
     opacity: 0.9;
-  }
+}
