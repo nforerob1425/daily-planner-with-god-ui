@@ -1,14 +1,11 @@
 <template>
   <v-container fluid class="fill-height d-flex align-center justify-center">
     <v-card class="pa-5 mx-auto text-center sunken-card">
-      <v-card-title class="text-h4 font-weight-bold"></v-card-title>
+      <v-card-title class="text-h3 font-weight-bold">Bienvenido {{ this.user.firstName }}  {{ this.user.lastName }}</v-card-title>
       <v-card-text class="text-h6">
         <v-container>
           <!-- Libros Propios -->
           <v-row>
-            <v-col cols="12">
-              <h2 class="text-h4 font-weight-bold">Tus R07's</h2>
-            </v-col>
             <v-col 
               v-for="item in ownItems" 
               :key="item.id" 
@@ -44,7 +41,7 @@
           <!-- Libros Reportados -->
           <v-row>
             <v-col cols="12">
-              <h2 class="text-h4 font-weight-bold">Los R07's de tus ovejas</h2>
+              <h2 class="text-h5 font-weight-bold">Los R07's de tus ovejas</h2>
             </v-col>
             <v-col 
               v-for="item in reportedItems" 
@@ -153,6 +150,7 @@
 
 <script>
 import api from '@/plugins/axios';
+import { mapState } from 'vuex';
 
 const MONTHS_ORDER = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -197,6 +195,7 @@ export default {
     };
   },
   computed: {
+    ...mapState(['user']),
     ownItems() {
       return this.data.filter(item => !item.isReported);
     },
@@ -233,14 +232,13 @@ export default {
       };
       return months[month] || month;
     },
-    fetchItems() {
-      api.get('/api/Cards')
-        .then(response => {
-          this.items = response.data.data;
-        })
-        .catch(error => {
-          console.error('Error fetching items:', error);
-        });
+    async fetchItems() {
+      try {
+        const response = await api.get(`/api/Cards?userId=${this.user.id}`);
+        this.items = response.data.data;
+      } catch (error) {
+        console.error('Error fetching items:', error);
+      }
     },
     fetchColors() {
       api.get('/api/ColorPaletts')
