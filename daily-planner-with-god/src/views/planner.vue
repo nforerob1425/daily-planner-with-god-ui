@@ -53,7 +53,7 @@
                       </h2>
                     </v-col>
                   </v-row>
-                  <v-row class="month-content pt-6">
+                  <v-row class="month-content pt-9">
                     <v-col v-for="item in month.items" :key="item.id" cols="12" sm="6" md="4" lg="3" xl="2">
                       <v-card elevation="8" :color="item.primaryColor" class="custom-card flex-grow-1">
 
@@ -125,6 +125,7 @@ export default {
       selectedAgendaId: null,
       filteredItems: [],
       items: [],
+      colors: [],
       data: [
         {
           id: "9656ec88-b900-4117-984f-74d2868a2a7c",
@@ -198,12 +199,62 @@ export default {
         .catch(error => {
           console.error('Error fetching items:', error);
         });
-    }
+    },
+    fetchColors() {
+      api.get('/api/ColorPaletts')
+        .then(response => {
+          this.colors = response.data.data;
+        })
+        .catch(error => {
+          console.error('Error fetching colors:', error);
+        });
+    },
   },
-  created() {
+  mounted() {
     this.fetchItems();
+    this.fetchColors();
   }
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.v-img {
+    flex-shrink: 0;
+    height: 200px !important;
+    min-height: 200px;
+}
+
+.date-circle {
+    width: 100px !important;
+    height: 100px !important;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    @media (max-width: 600px) {
+        width: 80px !important;
+        height: 80px !important;
+    }
+}
+
+
+.year-badge {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background-color: #2196f3;
+    color: white;
+    font-weight: bold;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+</style>

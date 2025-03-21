@@ -17,11 +17,11 @@
         </template>
 
         <v-list>
-          <v-list-item v-for="(item, index) in menuItems" :key="index" :to="item.route" active-class="active-item">
-            <template v-slot:prepend>
-              <v-icon>{{ item.icon }}</v-icon>
-            </template>
-            <v-list-item-title>{{ item.title }}</v-list-item-title>
+          <v-list-item @click="cambiarContraseña">
+              <v-list-item-title>Cambiar contraseña</v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="cerrarSesion">
+              <v-list-item-title>Cerrar sesión</v-list-item-title>
           </v-list-item>
         </v-list>
       </v-menu>
@@ -45,6 +45,8 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex';
+
 export default {
   name: 'MainLayout',
   data() {
@@ -60,12 +62,21 @@ export default {
     };
   },
   methods: {
+    ...mapActions(['logout']),
+    
     cambiarContraseña() {
       alert('Cambiar contraseña');
     },
-    cerrarSesion() {
-      alert('Cerrar sesión');
-    },
+    
+    async cerrarSesion() {
+      try {
+        await this.logout();
+        this.$router.push({ path: '/login', query: { redirected: true } });
+      } catch (error) {
+        console.error('Error al cerrar sesión:', error);
+        alert('Ocurrió un error al cerrar la sesión');
+      }
+    }
   },
 };
 </script>
