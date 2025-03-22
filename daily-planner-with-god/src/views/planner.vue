@@ -1,13 +1,13 @@
 <template>
   <v-container fluid class="fill-height d-flex align-center justify-center">
     <v-card class="pa-5 mx-auto text-center sunken-card">
-      <v-card-title class="text-h3 font-weight-bold">Bienvenido {{ this.user.firstName }}  {{ this.user.lastName }}</v-card-title>
+      <v-card-title class="text-h3 font-weight-bold">Bienvenido - {{ fullName }}</v-card-title>
       <v-card-text class="text-h6">
         <v-container>
           <!-- Libros Propios -->
-          <v-row>
+          <v-row v-if="processedOwnItems.length > 0">
             <v-col 
-              v-for="item in ownItems" 
+              v-for="item in processedOwnItems" 
               :key="item.id" 
               cols="12" 
               sm="6" 
@@ -39,12 +39,12 @@
           </v-row>
 
           <!-- Libros Reportados -->
-          <v-row>
+          <v-row v-if="processedReportedItems.length > 0">
             <v-col cols="12">
               <h2 class="text-h5 font-weight-bold">Los R07's de tus ovejas</h2>
             </v-col>
             <v-col 
-              v-for="item in reportedItems" 
+              v-for="item in processedReportedItems" 
               :key="item.id" 
               cols="12" 
               sm="6" 
@@ -77,80 +77,21 @@
         </v-container>
       </v-card-text>
     </v-card>
-    <v-dialog v-model="dialog" fullscreen>
-      <v-card class="dialog-card">
-        <v-btn icon="mdi-close" variant="flat" size="large" color="error" class="close-btn"
-          @click="dialog = false"></v-btn>
-        <v-container fluid class="pa-5 dialog-container">
-          <div v-for="month in groupedByMonth" :key="month.name" class="month-section">
-            <v-row class="month-header sticky-header">
-              <v-col cols="12">
-                <h2 class="text-h4 font-weight-bold month-title">
-                  {{ month.name }}
-                  <v-chip class="ml-2" color="primary">
-                    {{ month.items.length }}
-                  </v-chip>
-                </h2>
-              </v-col>
-            </v-row>
-            <v-row class="month-content pt-9">
-              <v-col v-for="item in month.items" :key="item.id" cols="12" sm="6" md="4" lg="3" xl="2">
-                <v-card elevation="8" :color="item.primaryColor" class="custom-card flex-grow-1">
-
-                  <div class="user-label" v-if="reportedItems.some(agenda => agenda.id === item.agendaId)"
-                    :style="{ background: item.letterColor, color: item.primaryColor }">
-                    {{ item.originalUserFullName }}
-                  </div>
-
-                  <div class="date-container">
-                    <v-avatar size="80" :color="item.primaryColorDate" class="date-circle">
-                      <span class="date-text" :style="{ color: item.letterDateColor }">
-                        {{ item.monthCreated }} <br> {{ item.dayCreated }}
-                      </span>
-                    </v-avatar>
-                  </div>
-
-                  <v-card-title class="card-title text-wrap" :style="{ color: item.titleColor }">
-                    {{ item.title }}
-                  </v-card-title>
-
-                  <v-card-subtitle class="text-subtitle-1">
-                    <div class="versicle-text" :style="{ color: item.letterColor }">
-                      {{ item.versicle }}
-                    </div>
-                  </v-card-subtitle>
-
-                  <v-card-text class="custom-text flex-grow-1" :style="{ color: item.letterColor }">
-                    {{ item.content }}
-                  </v-card-text>
-
-                  <v-card-actions class="card-actions">
-                    <v-icon :color="item.favorite ? 'yellow' : 'gray'">mdi-star</v-icon>
-                  </v-card-actions>
-
-                </v-card>
-              </v-col>
-
-              <!-- Placeholder para meses vacíos -->
-              <template v-if="month.items.length === 0">
-                <v-col cols="12">
-                  <div class="empty-month text-body-1">
-                    No hay cards para este mes
-                  </div>
-                </v-col>
-              </template>
-            </v-row>
-          </div>
-        </v-container>
-      </v-card>
-    </v-dialog>
+    <AgendaDialog 
+      v-model="dialog" 
+      :filtered-items="filteredItems"
+      :grouped-by-month="groupedByMonth"
+      :processed-reported-items="processedReportedItems"
+      :current-user-full-name="fullName"
+      @close="dialog = false"
+    />
   </v-container>
 </template>
-
 
 <script>
 import api from '@/plugins/axios';
 import { mapState } from 'vuex';
+import AgendaDialog from '@/components/AgendaDialog.vue';
 
 const MONTHS_ORDER = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -159,69 +100,72 @@ const MONTHS_ORDER = [
 
 export default {
   name: "planner-view",
+  components: {
+    AgendaDialog
+  },
   data() {
     return {
+      currentYear: new Date().getFullYear(),
       dialog: false,
       selectedAgendaId: null,
+      fullName: "",
       filteredItems: [],
       items: [],
       colors: [],
-      data: [
-        {
-          id: "9656ec88-b900-4117-984f-74d2868a2a7c",
-          year: 2024,
-          title: "R07 - 2024",
-          content: "Esta agenda contiene tus cards del año 2024",
-          imageBackgroundSrc: "/assets/backgrounds/R07-2024.png",
-          isReported: true,
-        },
-        {
-          id: "9656ec88-b900-4117-984f-74d2868a2i9b",
-          year: 2024,
-          title: "R07 - 2024",
-          content: "Esta agenda contiene tus cards del año 2024",
-          imageBackgroundSrc: "/assets/backgrounds/R07-2024.png",
-          isReported: false,
-        },
-        {
-          id: "9656ec88-b900-4117-984f-74d2868a2i9p",
-          year: 2025,
-          title: "R07 - 2025",
-          content: "Esta agenda contiene tus cards del año 2025",
-          imageBackgroundSrc: "/assets/backgrounds/R07-2025.png",
-          isReported: false,
-        }
-      ],
+      data: [],
     };
   },
   computed: {
     ...mapState(['user']),
     ownItems() {
-      return this.data.filter(item => !item.isReported);
+      return this.data?.filter(item => !item.isReported) || [];
     },
     reportedItems() {
-      return this.data.filter(item => item.isReported);
+      return this.data?.filter(item => item.isReported) || [];
+    },
+    processedOwnItems() {
+      return this.ownItems.filter(agenda => 
+        this.groupedCardsByAgenda[agenda.id]?.length || agenda.year === this.currentYear
+      );
+    },
+    processedReportedItems() {
+      return this.reportedItems.filter(agenda => 
+        this.groupedCardsByAgenda[agenda.id]?.length
+      );
     },
     groupedByMonth() {
-      const grouped = this.filteredItems.reduce((acc, item) => {
+      const grouped = this.filteredItems?.reduce((acc, item) => {
         const month = item.monthCreated;
         if (!acc[month]) acc[month] = [];
         acc[month].push(item);
         return acc;
-      }, {});
+      }, {}) || {};
 
       return MONTHS_ORDER.map(month => ({
         name: month,
         items: grouped[month] || [],
         spanishName: this.getSpanishMonth(month)
       }));
+    },
+    groupedCardsByAgenda() {
+      return this.items?.reduce((acc, card) => {
+        const agendaId = card.agendaId;
+        if (!acc[agendaId]) acc[agendaId] = [];
+        acc[agendaId].push(card);
+        return acc;
+      }, {}) || {};
     }
   },
   methods: {
     openDialog(agendaId) {
       this.selectedAgendaId = agendaId;
-      this.filteredItems = this.items.filter(item => item.agendaId === agendaId);
-      this.dialog = true;
+      this.filteredItems = this.groupedCardsByAgenda[agendaId] || [];
+      if (this.dialog) {
+        this.dialog = false;
+        setTimeout(() => this.dialog = true, 50);
+      } else {
+        this.dialog = true;
+      }
     },
     getSpanishMonth(month) {
       const months = {
@@ -235,15 +179,25 @@ export default {
     async fetchItems() {
       try {
         const response = await api.get(`/api/Cards?userId=${this.user.id}`);
-        this.items = response.data.data;
+        this.items = response.data?.data || [];
+        this.items.sort((a, b) => new Date(a.createDate) - new Date(b.createDate));
       } catch (error) {
         console.error('Error fetching items:', error);
+      }
+    },
+    async fetchAgendas() {
+      try {
+        const response = await api.get('/api/Agendas');
+        this.data = response.data?.data || [];
+        await this.fetchItems();
+      } catch (error) {
+        console.error('Error fetching agendas:', error);
       }
     },
     fetchColors() {
       api.get('/api/ColorPaletts')
         .then(response => {
-          this.colors = response.data.data;
+          this.colors = response.data?.data || [];
         })
         .catch(error => {
           console.error('Error fetching colors:', error);
@@ -251,8 +205,9 @@ export default {
     },
   },
   mounted() {
-    this.fetchItems();
+    this.fetchAgendas();
     this.fetchColors();
+    this.fullName = `${this.user?.firstName || ''} ${this.user?.lastName || ''}`.trim();
   }
 };
 </script>
