@@ -83,6 +83,7 @@
       :grouped-by-month="groupedByMonth"
       :processed-reported-items="processedReportedItems"
       :current-user-full-name="fullName"
+      :colors="colors"
       @close="dialog = false"
     />
   </v-container>
