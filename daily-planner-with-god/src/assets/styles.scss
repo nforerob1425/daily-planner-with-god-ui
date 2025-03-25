@@ -1,10 +1,17 @@
-// Variables reutilizables
-$transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-$hover-effect: scale(1.05);
-$box-shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.2);
+// Variables
+$transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+$box-shadow-hover: 0 12px 24px rgba(0, 0, 0, 0.15);
+$border-radius-card: 20px;
+$edit-btn-size: 32px;
+$hover-gradient: linear-gradient(
+    45deg, 
+    rgba(255, 255, 255, 0.685) 25%,
+    rgba(255, 255, 255, 0.87) 50%,
+    rgba(255, 255, 255, 0.616) 75%
+);
+$hover-animation-speed: 1.5s;
 
 // Estilos base
-
 .v-row {
     margin: 0 -4px;
     
@@ -32,65 +39,209 @@ $box-shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.2);
     border-radius: 8px !important;
 }
 
-// Badges y chips
-.year-chip {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-}
-
-.reported-badge {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    font-weight: bold;
-}
-
-.year-text, .reported-text {
-    color: white;
-    font-weight: bold;
-}
-
-// Cards
-.card {
-    border-radius: 16px !important;
-    transition: $transition;
-
-    &:hover {
-        transform: $hover-effect;
-        box-shadow: $box-shadow-hover;
-    }
-}
-
+// Componente Card
 .custom-card {
-    @extend .card;
-    aspect-ratio: 1 / 1;
-    position: relative !important;
-    display: flex !important;
-    flex-direction: column !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    padding: 16px !important;
-    overflow: visible !important;
-    min-height: 300px !important;
-    height: 100% !important;
-    margin: 0 !important;
-
-    @media (max-width: 960px) {
-        aspect-ratio: unset;
-        min-height: 400px;
-    }
-
-    @media (max-width: 600px) {
-        min-height: 350px;
+    position: relative;
+    overflow: hidden;
+    transition: $transition;
+    border-radius: $border-radius-card !important;
+    min-height: 300px;
+    display: flex;
+    flex-direction: column;
+    margin: 8px;
+    
+    &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -150%;
+        width: 300%;
+        height: 100%;
+        background: $hover-gradient;
+        opacity: 0;
+        transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 0;
+        background-size: 200% auto;
+        filter: brightness(1.3);
+        mix-blend-mode: soft-light;
+        animation-duration: $hover-animation-speed;
     }
 
     &:hover {
+        transform: translateY(-5px);
+        box-shadow: $box-shadow-hover !important;
+        
+        &::before {
+            left: 0;
+            animation: gradientFlow 3s infinite;
+            opacity: 0.7;
+            animation-timing-function: linear;
+        }
+        
+        .edit-btn {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    // Encabezado
+    .card-header {
+        position: relative;
+        height: 120px;
+        background: linear-gradient(15deg, rgba(0,0,0,0.1) 0%, transparent 100%);
+        padding: 15px;
+        overflow: hidden;
+        z-index: 1;
+    }
+
+    // Badge de fecha
+    .date-badge {
+        position: absolute;
+        top: 15px;
+        left: 15px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
         z-index: 2;
+
+        .month {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-bottom: 4px;
+            text-shadow: 
+                0.07em 0 var(--text-stroke-color),
+                -0.07em 0 var(--text-stroke-color),
+                0 0.07em var(--text-stroke-color),
+                0 -0.07em var(--text-stroke-color);
+            --text-stroke-color: rgba(0,0,0,0.3);
+        }
+
+        .day {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            font-weight: 700;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            text-shadow: 
+                0.05em 0.05em 0.1em rgba(0,0,0,0.15),
+                -0.05em -0.05em 0.1em rgba(255,255,255,0.1);
+        }
+    }
+
+    // Botón de edición
+    .edit-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        width: $edit-btn-size;
+        height: $edit-btn-size;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: $transition;
+        opacity: 0;
+        transform: translateY(-10px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        z-index: 3;
+
+        .v-icon {
+            color: #2c3e50;
+            font-size: 1.2rem;
+            transition: transform 0.2s ease;
+        }
+
+        &:hover {
+            background: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            
+            .v-icon {
+                transform: scale(1.1);
+            }
+        }
+    }
+
+    // Contenido
+    .card-content {
+        padding: 20px;
+        position: relative;
+        z-index: 1;
+        flex-grow: 1;
+
+        .card-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 0;
+            padding: 0;
+            min-height: 60px;
+
+            .title-text {
+                font-size: 1.4rem;
+                font-weight: 700;
+                line-height: 1.3;
+                max-width: 80%;
+                text-shadow: 
+                    0.05em 0.05em 0.2em rgba(0,0,0,0.25),
+                    -0.05em -0.05em 0.1em rgba(255,255,255,0.15);
+            }
+
+            .favorite-icon {
+                filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+            }
+        }
+
+        .versicle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 0;
+            font-style: italic;
+            opacity: 0.9;
+            font-size: 0.95rem;
+
+            .v-icon {
+                flex-shrink: 0;
+            }
+        }
+
+        .content {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            padding: 15px 0;
+            position: relative;
+
+            &::before {
+                content: "“";
+                position: absolute;
+                top: -10px;
+                left: -5px;
+                font-size: 3rem;
+                opacity: 0.1;
+            }
+        }
+    }
+
+    .border-effect {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 60%;
+        height: 40%;
+        opacity: 0.1;
+        clip-path: polygon(100% 0, 0% 100%, 100% 100%);
     }
 }
 
-// Elementos posicionados
+// Efectos de texto
 .user-label {
     position: absolute;
     top: -20px;
@@ -104,73 +255,19 @@ $box-shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.2);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    text-shadow: 
+        0.05em 0.05em 0.1em rgba(0,0,0,0.3),
+        -0.05em -0.05em 0.1em rgba(255,255,255,0.2);
 }
 
-.date-container {
-    position: absolute;
-    top: -35px;
-    left: -25px;
-    z-index: 10;
+// Animaciones
+@keyframes gradientFlow {
+    0% { background-position: -150% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 150% 50%; }
 }
 
-
-
-.date-text {
-    font-size: 1.2rem;
-    font-weight: bold;
-    text-align: center;
-    line-height: 1.2;
-}
-
-// Textos
-.card-title {
-    font-size: clamp(1.5rem, 3vw, 2.8rem);
-    margin-top: 40px;
-    line-height: 1.2;
-    padding: 0 8px;
-
-    @media (max-width: 600px) {
-        font-size: 1.8rem;
-        margin-top: 30px;
-    }
-}
-
-.versicle-text {
-    font-size: clamp(1rem, 1.5vw, 1.5rem);
-    font-weight: bold;
-    text-align: center;
-}
-
-.custom-text {
-    font-size: 1rem;
-    text-align: justify;
-    padding: 10px;
-    overflow: auto;
-    max-height: 300px;
-    flex-grow: 1;
-    width: 100%;
-
-    &::-webkit-scrollbar {
-        width: 6px;
-        
-        &-track {
-            background: rgba(0, 0, 0, 0.1);
-        }
-        
-        &-thumb {
-            background-color: rgba(0, 0, 0, 0.3);
-            border-radius: 4px;
-        }
-    }
-}
-
-// Componentes
-.card-actions {
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-}
-
+// Estilos del diálogo
 .dialog-container {
     overflow-y: auto;
     height: 100vh;
@@ -212,22 +309,7 @@ $box-shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.2);
     color: #666;
 }
 
-// Responsive
-@media (max-width: 600px) {
-    .month-title {
-        font-size: 1.5rem !important;
-    }
-
-    .sticky-header {
-        top: -16px;
-    }
-
-    .close-btn {
-        top: 10px;
-        right: 10px;
-    }
-}
-
+// Botones flotantes
 .close-btn {
     position: fixed !important;
     top: 20px;
@@ -254,10 +336,59 @@ $box-shadow-hover: 0 8px 16px rgba(0, 0, 0, 0.2);
     }
 }
 
-.v-dialog--fullscreen {
-    overflow: visible !important;
+// Responsive
+@media (max-width: 960px) {
+    .custom-card {
+        aspect-ratio: unset;
+        min-height: 400px;
+
+        .card-header {
+            height: 100px;
+        }
+    }
 }
 
-.sticky-header ~ .close-btn {
-    opacity: 0.9;
+@media (max-width: 600px) {
+    .custom-card {
+        min-height: 350px;
+        margin: 4px;
+
+        .card-content {
+            padding: 15px;
+
+            .card-title .title-text {
+                font-size: 1.2rem;
+            }
+
+            .content {
+                font-size: 0.85rem;
+            }
+        }
+
+        .date-badge {
+            .month {
+                font-size: 0.8rem;
+            }
+
+            .day {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2rem;
+            }
+        }
+    }
+}
+
+// Scroll personalizado
+::-webkit-scrollbar {
+    width: 6px;
+    
+    &-track {
+        background: rgba(0, 0, 0, 0.1);
+    }
+    
+    &-thumb {
+        background-color: rgba(0, 0, 0, 0.3);
+        border-radius: 4px;
+    }
 }

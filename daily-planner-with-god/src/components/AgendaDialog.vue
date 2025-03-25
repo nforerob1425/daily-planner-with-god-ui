@@ -259,40 +259,92 @@
               lg="3" 
               xl="2"
             >
-              <v-card elevation="8" :color="item.primaryColor" class="custom-card flex-grow-1">
+              <v-card 
+                elevation="8" 
+                :color="item.primaryColor" 
+                class="custom-card flex-grow-1"
+                :style="{ '--title-color': item.titleColor }"
+              >
+                <!-- User Label original -->
                 <div 
                   class="user-label" 
-                   v-if="shouldShowUserLabel(item)"
-                  :style="{ background: item.letterColor, color: item.primaryColor }"
+                  v-if="shouldShowUserLabel(item)"
+                  :style="{ 
+                    background: item.letterColor, 
+                    color: item.primaryColor 
+                  }"
                 >
                   {{ item.originalUserFullName }}
                 </div>
 
-                <div class="date-container">
-                  <v-avatar size="80" :color="item.primaryColorDate" class="date-circle">
-                    <span class="date-text" :style="{ color: item.letterDateColor }">
-                      {{ item.monthCreated }} <br> {{ item.dayCreated }}
+                <!-- Date Container original mejorado -->
+                <div class="card-header">
+                  <div class="edit-btn">
+                    <v-icon>mdi-pencil</v-icon>
+                  </div>
+
+                  <div class="date-badge">
+                    <span 
+                      class="month" 
+                      :style="{ 
+                        color: item.letterDateColor,
+                        textShadow: `
+                          0.05em 0.05em 0.1em ${getContrastShadow(item.primaryColorDate)},
+                          -0.05em -0.05em 0.1em ${getLightShadow(item.primaryColorDate)}
+                        `
+                      }"
+                      data-text="item.monthCreated"
+                    >
+                      {{ item.monthCreated }}
                     </span>
-                  </v-avatar>
+                    <span 
+                      class="day" 
+                      :style="{ 
+                        backgroundColor: item.primaryColorDate,
+                        color: item.letterDateColor
+                      }"
+                    >
+                      {{ item.dayCreated }}
+                    </span>
+                  </div>
                 </div>
 
-                <v-card-title class="card-title text-wrap" :style="{ color: item.titleColor }">
-                  {{ item.title }}
-                </v-card-title>
+                <!-- Card Content mejorado -->
+                <div class="card-content">
+                  <v-card-title class="card-title">
+                    <span 
+                      class="title-text" 
+                      :style="{ color: item.titleColor }"
+                    >
+                      {{ item.title }}
+                    </span>
+                    <v-icon 
+                      :color="item.favorite ? 'yellow' : 'grey'"
+                      class="favorite-icon"
+                    >
+                      mdi-star
+                    </v-icon>
+                  </v-card-title>
 
-                <v-card-subtitle class="text-subtitle-1">
-                  <div class="versicle-text" :style="{ color: item.letterColor }">
-                    {{ item.versicle }}
-                  </div>
-                </v-card-subtitle>
+                  <v-card-subtitle class="versicle">
+                    <v-icon small :color="item.titleColor">mdi-book</v-icon>
+                    <span :style="{ color: item.letterColor }">
+                      {{ item.versicle }}
+                    </span>
+                  </v-card-subtitle>
 
-                <v-card-text class="custom-text flex-grow-1" :style="{ color: item.letterColor }">
-                  {{ item.content }}
-                </v-card-text>
+                  <v-card-text 
+                    class="content" 
+                    :style="{ color: item.letterColor }"
+                  >
+                    {{ item.content }}
+                  </v-card-text>
+                </div>
 
-                <v-card-actions class="card-actions">
-                  <v-icon :color="item.favorite ? 'yellow' : 'gray'">mdi-star</v-icon>
-                </v-card-actions>
+                <!-- Efecto de borde dinámico -->
+                <div class="border-effect" :style="{ 
+                  background: `linear-gradient(45deg, ${item.titleColor} 30%, transparent)`
+                }"></div>
               </v-card>
             </v-col>
 
@@ -314,6 +366,7 @@
 import { useNotification } from "@kyvg/vue3-notification";
 import api from '@/plugins/axios';
 import { mapState, mapActions } from 'vuex';
+import tinycolor from 'tinycolor2';
 
 export default {
   setup() {
@@ -393,6 +446,16 @@ export default {
       );
       return color?.colorId || null;
     },
+    getContrastShadow(color) {
+        return tinycolor(color).isLight() 
+            ? 'rgba(0, 0, 0, 0.2)' 
+            : 'rgba(255, 255, 255, 0.2)';
+    },
+    getLightShadow(color) {
+        return tinycolor(color).isLight()
+            ? 'rgba(255, 255, 255, 0.15)'
+            : 'rgba(0, 0, 0, 0.15)';
+    },
     prepareCardData() {
       return {
         createDate: new Date().toISOString(),
@@ -431,7 +494,6 @@ export default {
       };
     },
     createCard() {
-      // Validar campos del paso 1 (colores)
       const colorFields = [
         'primaryColorDateId',
         'letterDateColorId',
@@ -464,7 +526,6 @@ export default {
         return;
       }
 
-      
       this.isCreating = true;
       const payload = this.prepareCardData();
       // Llamada API
