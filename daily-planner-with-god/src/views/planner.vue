@@ -194,7 +194,7 @@ export default {
     },
     async fetchAgendas() {
       try {
-        const response = await api.get('/api/Agendas');
+        const response = await api.get(`/api/Agendas?isMale=${this.user.isMale}`);
         this.data = response.data?.data || [];
         await this.fetchItems();
       } catch (error) {
@@ -299,9 +299,9 @@ export default {
   height: 448px;
   background: #f8f8f8;
   border-radius: 2px 12px 12px 2px;
-  transition: all 0.4s ease;
+  transition: all 0.2s ease;
   opacity: 0;
-  left: 15px;
+  left: 18px;
   top: 5px;
   border-right: 2px solid #d0d0d0;
   transform-origin: left center;
@@ -310,18 +310,18 @@ export default {
 
 /* Posición inicial hojas */
 .book-leaf:nth-child(1) {
-  transform: rotateY(-5deg) translateX(-8px);
+  transform: rotateY(-5deg) translateX(-10px);
   transition-delay: 0.1s;
 }
 
 .book-leaf:nth-child(2) {
-  transform: rotateY(-10deg) translateX(-16px);
-  transition-delay: 0.2s;
+  transform: rotateY(-5deg) translateX(-10px);
+  transition-delay: 0.1s;
 }
 
 .book-leaf:nth-child(3) {
-  transform: rotateY(-15deg) translateX(-24px);
-  transition-delay: 0.3s;
+  transform: rotateY(-5deg) translateX(-10px);
+  transition-delay: 0.1s;
 }
 
 /* Animación hover hojas */
@@ -330,15 +330,15 @@ export default {
 }
 
 .book-wrapper:hover .book-leaf:nth-child(1) {
-  transform: rotateY(-5deg) translateX(5px);
+  transform: rotateY(-10deg) translateX(5px);
 }
 
 .book-wrapper:hover .book-leaf:nth-child(2) {
-  transform: rotateY(-10deg) translateX(10px);
+  transform: rotateY(-10deg) translateX(20px);
 }
 
 .book-wrapper:hover .book-leaf:nth-child(3) {
-  transform: rotateY(-15deg) translateX(15px);
+  transform: rotateY(-10deg) translateX(10px);
 }
 
 /* Título superior */

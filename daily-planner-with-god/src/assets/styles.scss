@@ -5,9 +5,9 @@ $border-radius-card: 20px;
 $edit-btn-size: 32px;
 $hover-gradient: linear-gradient(
     45deg, 
-    rgba(255, 255, 255, 0.685) 25%,
-    rgba(255, 255, 255, 0.87) 50%,
-    rgba(255, 255, 255, 0.616) 75%
+    rgba(255, 255, 255, 0.301) 25%,
+    rgba(255, 255, 255, 0.808) 50%,
+    rgba(255, 255, 255, 0.212) 75%
 );
 $hover-animation-speed: 1.5s;
 
@@ -88,7 +88,7 @@ $hover-animation-speed: 1.5s;
     .card-header {
         position: relative;
         height: 120px;
-        background: linear-gradient(15deg, rgba(0,0,0,0.1) 0%, transparent 100%);
+        background: linear-gradient(0deg, rgba(0,0,0,0.4) 0%, transparent 100%) !important;
         padding: 15px;
         overflow: hidden;
         z-index: 1;
@@ -175,6 +175,7 @@ $hover-animation-speed: 1.5s;
         position: relative;
         z-index: 1;
         flex-grow: 1;
+        background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, transparent 100%) !important;
 
         .card-title {
             display: flex;
@@ -243,15 +244,17 @@ $hover-animation-speed: 1.5s;
 
 // Efectos de texto
 .user-label {
-    position: absolute;
+    text-align: center;
+    position: sticky;
     top: -20px;
-    left: 70%;
+    left: 50%;
     transform: translateX(-50%);
     padding: 5px 10px;
     font-weight: bold;
-    border-radius: 6px;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
     font-size: 0.8rem;
-    max-width: 80%;
+    max-width: 60%;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
