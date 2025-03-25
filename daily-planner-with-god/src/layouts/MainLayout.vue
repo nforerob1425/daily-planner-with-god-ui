@@ -40,6 +40,7 @@
     </v-navigation-drawer>
     <v-main>
       <router-view></router-view>
+      <notifications position="top right" class="notification-card"/>
     </v-main>
   </v-app>
 </template>
@@ -82,5 +83,10 @@ export default {
 </script>
 
 <style scoped>
-
+.notification-card {
+  width: 500px !important;
+  top: 10px !important;
+  right: 10px !important;
+  font-size: 20px !important;
+}
 </style>

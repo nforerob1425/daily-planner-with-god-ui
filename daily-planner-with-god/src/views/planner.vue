@@ -1,4 +1,4 @@
-<template>
+``<template>
   <v-container fluid class="fill-height d-flex align-center justify-center">
     <v-card class="pa-5 mx-auto text-center sunken-card">
       <v-card-title class="text-h3 font-weight-bold">Bienvenido - {{ fullName }}</v-card-title>
@@ -84,14 +84,16 @@
       :processed-reported-items="processedReportedItems"
       :current-user-full-name="fullName"
       :colors="colors"
+      :selected-agenda-id="selectedAgendaId"
       @close="dialog = false"
+      @card-created="handleNewCard"
     />
   </v-container>
 </template>
 
 <script>
 import api from '@/plugins/axios';
-import { mapState } from 'vuex';
+import { mapState, mapActions } from 'vuex';
 import AgendaDialog from '@/components/AgendaDialog.vue';
 
 const MONTHS_ORDER = [
@@ -158,6 +160,7 @@ export default {
     }
   },
   methods: {
+    ...mapActions(['logout']),
     openDialog(agendaId) {
       this.selectedAgendaId = agendaId;
       this.filteredItems = this.groupedCardsByAgenda[agendaId] || [];
@@ -184,6 +187,9 @@ export default {
         this.items.sort((a, b) => new Date(a.createDate) - new Date(b.createDate));
       } catch (error) {
         console.error('Error fetching items:', error);
+        if (error.response.status === 401) {
+          this.logout();
+        }
       }
     },
     async fetchAgendas() {
@@ -193,6 +199,10 @@ export default {
         await this.fetchItems();
       } catch (error) {
         console.error('Error fetching agendas:', error);
+        if (error.response.status === 401) {
+          this.logout();
+        }
+        
       }
     },
     fetchColors() {
@@ -202,8 +212,16 @@ export default {
         })
         .catch(error => {
           console.error('Error fetching colors:', error);
+          if (error.response.status === 401) {
+            this.logout();
+          }
         });
     },
+    handleNewCard(newCard) {
+      this.items.unshift(newCard);
+      this.items.sort((a, b) => new Date(a.createDate) - new Date(b.createDate));
+      this.filteredItems = this.groupedCardsByAgenda[this.selectedAgendaId] || [];
+    }
   },
   mounted() {
     this.fetchAgendas();

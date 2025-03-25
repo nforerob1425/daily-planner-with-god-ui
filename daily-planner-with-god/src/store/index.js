@@ -77,6 +77,7 @@ export default createStore({
     logout({ commit }) {
       commit('CLEAR_USER_DATA');
       commit('SET_ERROR', null);
+      window.location.reload();
       
       // Limpiar cookies relacionadas
       if (typeof document !== 'undefined') {

@@ -2,14 +2,15 @@
   <v-dialog :value="value" fullscreen>
     <v-card class="dialog-card">
 
-      <v-btn
+      <v-btn icon="mdi-plus"
         fab
         dark
         color="primary"
         class="floating-add-btn"
         @click="openCreateDialog"
+        size="x-large"
       >
-        <v-icon>mdi-plus</v-icon>
+        
       </v-btn>
 
       <!-- Diálogo de creación -->
@@ -19,204 +20,208 @@
             
             <!-- Paso 1 - Selección de colores -->
             <template #[`item.1`]>
-              <v-card title="Configuración de colores" flat class="pa-4 scroll-container">
-                <div class="color-grid">
-                  <!-- Primary Date Background -->
-                  <div class="color-picker-container">
-                    <v-combobox
-                      v-model="newCard.primaryColorDateId"
-                      :items="filterColors('Title Date Background')"
-                      item-value="colorId"
-                      label="Fondo de fecha"
-                      outlined
-                      clearable
-                      class="combobox-field"
-                      @update:modelValue="val => updateColor('primaryColorDateId', val)"
-                    >
-                    <template v-slot:item="{ props, item }">
-                      <v-list-item v-bind="props" @mouseover="updateColor('primaryColorDateId', item.value)">
-                        <v-list-item-title>{{ item.raw.colorName }}</v-list-item-title>
-                      </v-list-item>
-                    </template>
-                    </v-combobox>
-                    
-                    <div class="color-preview">
-                      <v-avatar
-                        size="32"
-                        :style="{ backgroundColor: newCard.primaryColorDateId || '#e0e0e0' }"
-                      />
+              <v-form v-model="valid" @submit.prevent>
+                <v-card title="Configuración de colores" flat class="pa-4 scroll-container">
+                  <div class="color-grid">
+                    <!-- Primary Date Background -->
+                    <div class="color-picker-container">
+                      <v-combobox
+                        v-model="newCard.primaryColorDateId"
+                        :items="filterColors('Title Date Background')"
+                        item-value="colorId"
+                        label="Fondo de fecha"
+                        outlined
+                        clearable
+                        class="combobox-field"
+                        @update:modelValue="val => updateColor('primaryColorDateId', val)"
+                      >
+                      <template v-slot:item="{ props, item }">
+                        <v-list-item v-bind="props" @mouseover="updateColor('primaryColorDateId', item.value)">
+                          <v-list-item-title>{{ item.raw.colorName }}</v-list-item-title>
+                        </v-list-item>
+                      </template>
+                      </v-combobox>
+                      
+                      <div class="color-preview">
+                        <v-avatar
+                          size="32"
+                          :style="{ backgroundColor: newCard.primaryColorDateId || '#e0e0e0' }"
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <!-- Letter Date Color -->
-                  <div class="color-picker-container">
-                    <v-combobox
-                      v-model="newCard.letterDateColorId"
-                      :items="filterColors('Primary Letter')"
-                      item-value="colorId"
-                      label="Texto de fecha"
-                      outlined
-                      clearable
-                      class="combobox-field"
-                      @update:modelValue="val => updateColor('letterDateColorId', val)"
-                    >
-                    <template v-slot:item="{ props, item }">
-                      <v-list-item v-bind="props" @mouseover="updateColor('letterDateColorId', item.value)">
-                        <v-list-item-title>{{ item.raw.colorName }}</v-list-item-title>
-                      </v-list-item>
-                    </template>
-                    </v-combobox>
-                    <div class="color-preview">
-                      <v-avatar
-                        size="36"
-                        :style="{ backgroundColor: newCard.letterDateColorId || '#e0e0e0' }"
-                      />
+                    <!-- Letter Date Color -->
+                    <div class="color-picker-container">
+                      <v-combobox
+                        v-model="newCard.letterDateColorId"
+                        :items="filterColors('Primary Letter')"
+                        item-value="colorId"
+                        label="Texto de fecha"
+                        outlined
+                        clearable
+                        class="combobox-field"
+                        @update:modelValue="val => updateColor('letterDateColorId', val)"
+                      >
+                      <template v-slot:item="{ props, item }">
+                        <v-list-item v-bind="props" @mouseover="updateColor('letterDateColorId', item.value)">
+                          <v-list-item-title>{{ item.raw.colorName }}</v-list-item-title>
+                        </v-list-item>
+                      </template>
+                      </v-combobox>
+                      <div class="color-preview">
+                        <v-avatar
+                          size="36"
+                          :style="{ backgroundColor: newCard.letterDateColorId || '#e0e0e0' }"
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <!-- Primary Background -->
-                  <div class="color-picker-container">
-                    <v-combobox
-                      v-model="newCard.primaryColorId"
-                      :items="filterColors('Primary Background')"
-                      item-value="colorId"
-                      label="Fondo principal"
-                      outlined
-                      clearable
-                      class="combobox-field"
-                      @update:modelValue="val => updateColor('primaryColorId', val)"
-                    >
-                    <template v-slot:item="{ props, item }">
-                      <v-list-item v-bind="props" @mouseover="updateColor('primaryColorId', item.value)">
-                        <v-list-item-title>{{ item.raw.colorName }}</v-list-item-title>
-                      </v-list-item>
-                    </template>
-                    </v-combobox>
-                    <div class="color-preview">
-                      <v-avatar
-                        size="36"
-                        :style="{ backgroundColor: newCard.primaryColorId || '#e0e0e0' }"
-                      />
+                    <!-- Primary Background -->
+                    <div class="color-picker-container">
+                      <v-combobox
+                        v-model="newCard.primaryColorId"
+                        :items="filterColors('Primary Background')"
+                        item-value="colorId"
+                        label="Fondo principal"
+                        outlined
+                        clearable
+                        class="combobox-field"
+                        @update:modelValue="val => updateColor('primaryColorId', val)"
+                      >
+                      <template v-slot:item="{ props, item }">
+                        <v-list-item v-bind="props" @mouseover="updateColor('primaryColorId', item.value)">
+                          <v-list-item-title>{{ item.raw.colorName }}</v-list-item-title>
+                        </v-list-item>
+                      </template>
+                      </v-combobox>
+                      <div class="color-preview">
+                        <v-avatar
+                          size="36"
+                          :style="{ backgroundColor: newCard.primaryColorId || '#e0e0e0' }"
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <!-- Letter Color -->
-                  <div class="color-picker-container">
-                    <v-combobox
-                      v-model="newCard.letterColorId"
-                      :items="filterColors('Primary Letter')"
-                      item-value="colorId"
-                      label="Texto principal"
-                      outlined
-                      clearable
-                      class="combobox-field"
-                      @update:modelValue="val => updateColor('letterColorId', val)"
-                    >
-                    <template v-slot:item="{ props, item }">
-                      <v-list-item v-bind="props" @mouseover="updateColor('letterColorId', item.value)">
-                        <v-list-item-title>{{ item.raw.colorName }}</v-list-item-title>
-                      </v-list-item>
-                    </template>
-                    </v-combobox>
-                    <div class="color-preview">
-                      <v-avatar
-                        size="36"
-                        :style="{ backgroundColor: newCard.letterColorId || '#e0e0e0' }"
-                      />
+                    <!-- Letter Color -->
+                    <div class="color-picker-container">
+                      <v-combobox
+                        v-model="newCard.letterColorId"
+                        :items="filterColors('Primary Letter')"
+                        item-value="colorId"
+                        label="Texto principal"
+                        outlined
+                        clearable
+                        class="combobox-field"
+                        @update:modelValue="val => updateColor('letterColorId', val)"
+                      >
+                      <template v-slot:item="{ props, item }">
+                        <v-list-item v-bind="props" @mouseover="updateColor('letterColorId', item.value)">
+                          <v-list-item-title>{{ item.raw.colorName }}</v-list-item-title>
+                        </v-list-item>
+                      </template>
+                      </v-combobox>
+                      <div class="color-preview">
+                        <v-avatar
+                          size="36"
+                          :style="{ backgroundColor: newCard.letterColorId || '#e0e0e0' }"
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                  <!-- Title Color -->
-                  <div class="color-picker-container">
-                    <v-combobox
-                      v-model="newCard.titleColorId"
-                      :items="filterColors('Title')"
-                      item-value="colorId"
-                      label="Color del título"
-                      outlined
-                      clearable
-                      class="combobox-field"
-                      @update:modelValue="val => updateColor('titleColorId', val)"
-                    >
-                    <template v-slot:item="{ props, item }">
-                      <v-list-item v-bind="props" @mouseover="updateColor('titleColorId', item.value)">
-                        <v-list-item-title>{{ item.raw.colorName }}</v-list-item-title>
-                      </v-list-item>
-                    </template>
-                    </v-combobox>
-                    <div class="color-preview">
-                      <v-avatar
-                        size="36"
-                        :style="{ backgroundColor: newCard.titleColorId || '#e0e0e0' }"
-                      />
+                    <!-- Title Color -->
+                    <div class="color-picker-container">
+                      <v-combobox
+                        v-model="newCard.titleColorId"
+                        :items="filterColors('Title')"
+                        item-value="colorId"
+                        label="Color del título"
+                        outlined
+                        clearable
+                        class="combobox-field"
+                        @update:modelValue="val => updateColor('titleColorId', val)"
+                      >
+                      <template v-slot:item="{ props, item }">
+                        <v-list-item v-bind="props" @mouseover="updateColor('titleColorId', item.value)">
+                          <v-list-item-title>{{ item.raw.colorName }}</v-list-item-title>
+                        </v-list-item>
+                      </template>
+                      </v-combobox>
+                      <div class="color-preview">
+                        <v-avatar
+                          size="36"
+                          :style="{ backgroundColor: newCard.titleColorId || '#e0e0e0' }"
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
-              </v-card>
+                </v-card>
+            </v-form>
             </template>
 
             <!-- Paso 2 - Contenido -->
             <template #[`item.2`]>
-              <v-card title="Contenido de la card" flat class="pa-4 scroll-container">
-                <v-btn
-                  color="secondary"
-                  @click="step = 1"
-                  variant="text"
-                  class="mb-4"
-                >
-                  <v-icon start>mdi-arrow-left</v-icon>
-                  Volver a colores
-                </v-btn>
-
-                <v-text-field
-                  v-model="newCard.title"
-                  label="Título de la card"
-                  outlined
-                  clearable
-                  class="mb-4"
-                  :rules="[v => !!v || 'El título es requerido']"
-                ></v-text-field>
-
-                <v-textarea
-                  v-model="newCard.content"
-                  label="Contenido principal"
-                  outlined
-                  clearable
-                  rows="4"
-                  auto-grow
-                  class="mb-4"
-                  :rules="[v => !!v || 'El contenido es requerido']"
-                ></v-textarea>
-
-                <v-text-field
-                  v-model="newCard.versicle"
-                  label="Versículo relacionado"
-                  outlined
-                  clearable
-                  class="mb-6"
-                ></v-text-field>
-
-                <div class="dialog-actions">
+              <v-form v-model="valid" @submit.prevent>
+                <v-card title="Contenido" flat class="pa-4 scroll-container">
                   <v-btn
-                    color="error"
-                    variant="outlined"
-                    @click="closeCreateDialog"
-                    size="large"
+                    color="secondary"
+                    @click="step = 1"
+                    variant="text"
+                    class="mb-4"
                   >
-                    Cancelar
+                    <v-icon start>mdi-arrow-left</v-icon>
+                    Volver a colores
                   </v-btn>
-                  
-                  <v-btn
-                    color="primary"
-                    @click="createCard"
-                    size="large"
-                    :loading="isCreating"
-                  >
-                    <v-icon start>mdi-check</v-icon>
-                    Crear Card
-                  </v-btn>
-                </div>
-              </v-card>
+
+                  <v-text-field
+                    v-model="newCard.title"
+                    label="Título"
+                    outlined
+                    clearable
+                    class="mb-4"
+                    :rules="[v => !!v || 'El título es requerido']"
+                  ></v-text-field>
+
+                  <v-textarea
+                    v-model="newCard.content"
+                    label="Contenido principal"
+                    outlined
+                    clearable
+                    rows="4"
+                    auto-grow
+                    class="mb-4"
+                    :rules="[v => !!v || 'El contenido es requerido']"
+                  ></v-textarea>
+
+                  <v-text-field
+                    v-model="newCard.versicle"
+                    label="Versículo relacionado"
+                    outlined
+                    clearable
+                    class="mb-6"
+                  ></v-text-field>
+
+                  <div class="dialog-actions">
+                    <v-btn
+                      color="error"
+                      variant="outlined"
+                      @click="closeCreateDialog"
+                      size="large"
+                    >
+                      Cancelar
+                    </v-btn>
+                    
+                    <v-btn
+                      color="primary"
+                      @click="createCard"
+                      size="large"
+                      :loading="isCreating"
+                    >
+                      <v-icon start>mdi-check</v-icon>
+                      Crear Card
+                    </v-btn>
+                  </div>
+                </v-card>
+              </v-form>
             </template>
           </v-stepper>
         </v-card>
@@ -225,7 +230,7 @@
       <v-btn 
         icon="mdi-close" 
         variant="flat" 
-        size="large" 
+        size="x-large" 
         color="error" 
         class="close-btn"
         @click="$emit('close')"
@@ -306,7 +311,15 @@
 </template>
 
 <script>
+import { useNotification } from "@kyvg/vue3-notification";
+import api from '@/plugins/axios';
+import { mapState, mapActions } from 'vuex';
+
 export default {
+  setup() {
+    const { notify } = useNotification();
+    return { notify };
+  },
   name: 'AgendaDialog',
   props: {
     value: Boolean,
@@ -329,10 +342,15 @@ export default {
     colors: {
       type: Array,
       default: () => []
+    },
+    selectedAgendaId: {
+      type: String,
+      default: ''
     }
   },
   data() {
     return {
+      valid: false,
       isCreating: false,
       showCreateDialog: false,
       step: 1,
@@ -348,7 +366,11 @@ export default {
       },
     }
   },
+  computed: {
+    ...mapState(['user']),
+  },
   methods: {
+    ...mapActions(['logout']),
     openCreateDialog() {
       this.showCreateDialog = true
       this.step = 1
@@ -373,6 +395,7 @@ export default {
     },
     prepareCardData() {
       return {
+        createDate: new Date().toISOString(),
         primaryColorDateId: this.getColorId(this.newCard.primaryColorDateId, 'Title Date Background'),
         letterDateColorId: this.getColorId(this.newCard.letterDateColorId, 'Primary Letter'),
         primaryColorId: this.getColorId(this.newCard.primaryColorId, 'Primary Background'),
@@ -380,7 +403,10 @@ export default {
         titleColorId: this.getColorId(this.newCard.titleColorId, 'Title'),
         title: this.newCard.title,
         content: this.newCard.content,
-        versicle: this.newCard.versicle
+        versicle: this.newCard.versicle,
+        favorite: false,
+        agendaId: this.selectedAgendaId,
+        userId: this.user.id
       };
     },
     getSelectedColor(colorId, typeName) {
@@ -405,15 +431,78 @@ export default {
       };
     },
     createCard() {
-      const cardData = this.prepareCardData();
-      console.log('Datos a enviar:', cardData);
-      this.isCreating = true;
+      // Validar campos del paso 1 (colores)
+      const colorFields = [
+        'primaryColorDateId',
+        'letterDateColorId',
+        'primaryColorId',
+        'letterColorId',
+        'titleColorId'
+      ];
       
-      // Simulación de envío
-      setTimeout(() => {
-        this.isCreating = false;
-        this.closeCreateDialog();
-      }, 1000);
+      const missingColors = colorFields.filter(field => !this.newCard[field]);
+      
+      if (missingColors.length > 0) {
+        this.step = 1;        
+        this.notify({
+          title: 'Campos incompletos',
+          text: 'Por favor completa todos los campos de colores',
+          type: 'error',
+          position: 'bottom right'
+        });      
+        return;
+      }
+      
+      if (!this.newCard.title || !this.newCard.content) {
+        this.step = 2;        
+        this.notify({
+          title: 'Campos incompletos',
+          text: 'Por favor completa el título y el contenido',
+          type: 'error',
+          position: 'bottom right'
+        });
+        return;
+      }
+
+      
+      this.isCreating = true;
+      const payload = this.prepareCardData();
+      // Llamada API
+      api.post('/api/Cards', payload)
+        .then(response => {
+          this.notify({
+            title: 'Éxito',
+            text: 'Card creada correctamente',
+            type: 'success',
+            position: 'bottom right',
+            duration: 4000
+          });
+          this.$emit('card-created', response.data?.data);
+          this.closeCreateDialog();
+        })
+        .catch(error => {
+          let errorMessage = 'Error al crear la card';
+          
+          if (error.response.status === 401) {
+            this.logout();
+          } 
+          else {
+            if (error.response) {
+              errorMessage = error.response.data?.Message || error.response.data;
+            }
+            
+            this.notify({
+              title: 'Error',
+              text: errorMessage,
+              type: 'error',
+              position: 'bottom right',
+              duration: 5000
+            });
+          }
+        })
+        .finally(() => {
+          this.isCreating = false;
+        });
     },
     shouldShowUserLabel(item) {
       return this.processedReportedItems?.some(agenda => agenda.id === item.agendaId) && 
@@ -511,4 +600,5 @@ export default {
 :deep(.v-list-item__content) {
   padding: 0 !important;
 }
+
 </style>
