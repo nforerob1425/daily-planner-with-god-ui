@@ -402,12 +402,12 @@
     }
   
     .scroll-container {
-      max-height: calc(100vh - 120px);
+      max-height: calc(100vh - 250px);
       -webkit-overflow-scrolling: touch;
     }
   
     .color-picker-container {
-      flex-direction: column;
+      flex-direction: row-reverse;
     }
   
     .color-preview {

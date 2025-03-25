@@ -301,7 +301,7 @@ $hover-animation-speed: 1.5s;
     border-radius: 8px;
     display: inline-flex;
     align-items: center;
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0);
 }
 
 .empty-month {
@@ -379,6 +379,11 @@ $hover-animation-speed: 1.5s;
                 font-size: 1.2rem;
             }
         }
+    }
+
+    .v-card-title {
+        white-space: break-spaces !important;
+        font-size: 1.5rem !important;
     }
 }
 

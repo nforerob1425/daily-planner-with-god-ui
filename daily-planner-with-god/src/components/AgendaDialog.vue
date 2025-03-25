@@ -9,7 +9,6 @@
         color="primary"
         class="floating-add-btn"
         @click="openCreateDialog"
-        size="x-large"
       />
       
       <card-dialog
@@ -22,7 +21,6 @@
       <v-btn 
         icon="mdi-close" 
         variant="flat" 
-        size="x-large" 
         color="error" 
         class="close-btn"
         @click="$emit('close')"
