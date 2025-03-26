@@ -18,127 +18,158 @@
             <v-form v-model="valid" @submit.prevent>
               <v-card :title="title" flat class="pa-4 scroll-container">
                 <div class="color-grid">
-                  <!-- Primary Date Background -->
+                  
+                    <!-- Primary Background -->
                   <div class="color-picker-container">
-                    <v-combobox
-                      v-model="localCard.primaryColorDateId"
-                      :items="filterColors('Title Date Background')"
-                      item-value="colorId"
-                      label="Fondo de fecha"
-                      outlined
-                      clearable
-                      class="combobox-field"
-                    >
-                      <template v-slot:item="{ props, item }">
-                        <v-list-item v-bind="props" @mouseover="updateColor('primaryColorDateId', item.value)">
-                          <v-list-item-title>{{ item.raw.colorName }}</v-list-item-title>
-                        </v-list-item>
-                      </template>
-                    </v-combobox>
-                    <div class="color-preview">
-                      <v-avatar
-                        size="32"
-                        :style="{ backgroundColor: localCard.primaryColorDateId || '#e0e0e0' }"
-                      />
-                    </div>
-                  </div>
-  
-                  <!-- Letter Date Color -->
-                  <div class="color-picker-container">
-                    <v-combobox
-                      v-model="localCard.letterDateColorId"
-                      :items="filterColors('Primary Letter')"
-                      item-value="colorId"
-                      label="Texto de fecha"
-                      outlined
-                      clearable
-                      class="combobox-field"
-                    >
-                      <template v-slot:item="{ props, item }">
-                        <v-list-item v-bind="props" @mouseover="updateColor('letterDateColorId', item.value)">
-                          <v-list-item-title>{{ item.raw.colorName }}</v-list-item-title>
-                        </v-list-item>
-                      </template>
-                    </v-combobox>
-                    <div class="color-preview">
-                      <v-avatar
-                        size="36"
-                        :style="{ backgroundColor: localCard.letterDateColorId || '#e0e0e0' }"
-                      />
-                    </div>
-                  </div>
-  
-                  <!-- Primary Background -->
-                  <div class="color-picker-container">
-                    <v-combobox
-                      v-model="localCard.primaryColorId"
+                    <v-autocomplete
+                      v-model="localCard.primaryColor"
                       :items="filterColors('Primary Background')"
                       item-value="colorId"
-                      label="Fondo principal"
+                      label="Fondo"
                       outlined
                       clearable
                       class="combobox-field"
                     >
                       <template v-slot:item="{ props, item }">
-                        <v-list-item v-bind="props" @mouseover="updateColor('primaryColorId', item.value)">
-                          <v-list-item-title>{{ item.raw.colorName }}</v-list-item-title>
+                        <v-list-item v-bind="props">
+                            <v-list-item-title>{{ item.raw.colorName }}</v-list-item-title>
+                            <div class="color-preview-inner">
+                                <v-avatar
+                                    size="36"
+                                    :style="{ backgroundColor: item.value || '#e0e0e0' }"
+                                />
+                            </div>
                         </v-list-item>
                       </template>
-                    </v-combobox>
+                    </v-autocomplete>
                     <div class="color-preview">
                       <v-avatar
                         size="36"
-                        :style="{ backgroundColor: localCard.primaryColorId || '#e0e0e0' }"
+                        :style="{ backgroundColor: localCard.primaryColor || '#e0e0e0' }"
                       />
                     </div>
                   </div>
   
                   <!-- Letter Color -->
                   <div class="color-picker-container">
-                    <v-combobox
-                      v-model="localCard.letterColorId"
+                    <v-autocomplete
+                      v-model="localCard.letterColor"
                       :items="filterColors('Primary Letter')"
                       item-value="colorId"
-                      label="Texto principal"
+                      label="contenido"
                       outlined
                       clearable
                       class="combobox-field"
                     >
                       <template v-slot:item="{ props, item }">
-                        <v-list-item v-bind="props" @mouseover="updateColor('letterColorId', item.value)">
+                        <v-list-item v-bind="props">
                           <v-list-item-title>{{ item.raw.colorName }}</v-list-item-title>
+                          <div class="color-preview-inner">
+                                <v-avatar
+                                    size="36"
+                                    :style="{ backgroundColor: item.value || '#e0e0e0' }"
+                                />
+                            </div>
                         </v-list-item>
                       </template>
-                    </v-combobox>
+                    </v-autocomplete>
                     <div class="color-preview">
                       <v-avatar
                         size="36"
-                        :style="{ backgroundColor: localCard.letterColorId || '#e0e0e0' }"
+                        :style="{ backgroundColor: localCard.letterColor || '#e0e0e0' }"
                       />
                     </div>
                   </div>
   
                   <!-- Title Color -->
                   <div class="color-picker-container">
-                    <v-combobox
-                      v-model="localCard.titleColorId"
+                    <v-autocomplete
+                      v-model="localCard.titleColor"
                       :items="filterColors('Title')"
                       item-value="colorId"
-                      label="Color del título"
+                      label="Título"
                       outlined
                       clearable
                       class="combobox-field"
                     >
                       <template v-slot:item="{ props, item }">
-                        <v-list-item v-bind="props" @mouseover="updateColor('titleColorId', item.value)">
+                        <v-list-item v-bind="props">
                           <v-list-item-title>{{ item.raw.colorName }}</v-list-item-title>
+                          <div class="color-preview-inner">
+                                <v-avatar
+                                    size="36"
+                                    :style="{ backgroundColor: item.value || '#e0e0e0' }"
+                                />
+                            </div>
                         </v-list-item>
                       </template>
-                    </v-combobox>
+                    </v-autocomplete>
                     <div class="color-preview">
                       <v-avatar
                         size="36"
-                        :style="{ backgroundColor: localCard.titleColorId || '#e0e0e0' }"
+                        :style="{ backgroundColor: localCard.titleColor || '#e0e0e0' }"
+                      />
+                    </div>
+                  </div>
+
+                  <!-- Primary Date Background -->
+                  <div class="color-picker-container">
+                    <v-autocomplete
+                      v-model="localCard.primaryColorDate"
+                      :items="filterColors('Title Date Background')"
+                      item-value="colorId"
+                      label="Fondo secundario"
+                      outlined
+                      clearable
+                      class="combobox-field"
+                    >
+                      <template v-slot:item="{ props, item }">
+                        <v-list-item v-bind="props">
+                          <v-list-item-title>{{ item.raw.colorName }}</v-list-item-title>
+                          <div class="color-preview-inner">
+                                <v-avatar
+                                    size="36"
+                                    :style="{ backgroundColor: item.value || '#e0e0e0' }"
+                                />
+                            </div>
+                        </v-list-item>
+                      </template>
+                    </v-autocomplete>
+                    <div class="color-preview">
+                      <v-avatar
+                        size="32"
+                        :style="{ backgroundColor: localCard.primaryColorDate || '#e0e0e0' }"
+                      />
+                    </div>
+                  </div>
+  
+                  <!-- Letter Date Color -->
+                  <div class="color-picker-container">
+                    <v-autocomplete
+                      v-model="localCard.letterDateColor"
+                      :items="filterColors('Primary Letter')"
+                      item-value="colorId"
+                      label="Fecha"
+                      outlined
+                      clearable
+                      class="combobox-field"
+                    >
+                      <template v-slot:item="{ props, item }">
+                        <v-list-item v-bind="props">
+                          <v-list-item-title>{{ item.raw.colorName }}</v-list-item-title>
+                          <div class="color-preview-inner">
+                                <v-avatar
+                                    size="36"
+                                    :style="{ backgroundColor: item.value || '#e0e0e0' }"
+                                />
+                            </div>
+                        </v-list-item>
+                      </template>
+                    </v-autocomplete>
+                    <div class="color-preview">
+                      <v-avatar
+                        size="36"
+                        :style="{ backgroundColor: localCard.letterDateColor || '#e0e0e0' }"
                       />
                     </div>
                   </div>
@@ -235,7 +266,7 @@
         isLoading: false,
         step: 1,
         showDialog: this.show,
-        localCard: this.initialData || this.getDefaultCard()
+        localCard: this.initialData || this.getDefaultCard(),
       };
     },
     computed: {
@@ -272,10 +303,6 @@
           .filter((color, index, self) => self.indexOf(color) === index);
       },
   
-      updateColor(field, value) {
-        this.localCard[field] = value;
-      },
-  
       getColorId(hex, typeName) {
         const color = this.colors.find(c => 
           c.color === hex && 
@@ -296,11 +323,11 @@
   
       async handleSave() {
         const colorFields = [
-          'primaryColorDateId',
-          'letterDateColorId',
-          'primaryColorId',
-          'letterColorId',
-          'titleColorId'
+          'primaryColorDate',
+          'letterDateColor',
+          'primaryColor',
+          'letterColor',
+          'titleColor'
         ];
         
         const missingColors = colorFields.filter(field => !this.localCard[field]);
@@ -333,17 +360,22 @@
       },
   
       preparePayload() {
-        return {
-          ...this.localCard,
-          primaryColorDateId: this.getColorId(this.localCard.primaryColorDateId, 'Title Date Background'),
-          letterDateColorId: this.getColorId(this.localCard.letterDateColorId, 'Primary Letter'),
-          primaryColorId: this.getColorId(this.localCard.primaryColorId, 'Primary Background'),
-          letterColorId: this.getColorId(this.localCard.letterColorId, 'Primary Letter'),
-          titleColorId: this.getColorId(this.localCard.titleColorId, 'Title'),
-          createDate: this.mode === 'create' ? new Date().toISOString() : undefined,
+        var data = {
+            ...this.localCard,
+            primaryColorDateId: this.getColorId(this.localCard.primaryColorDate, 'Title Date Background'),
+            letterDateColorId: this.getColorId(this.localCard.letterDateColor, 'Primary Letter'),
+            primaryColorId: this.getColorId(this.localCard.primaryColor, 'Primary Background'),
+            letterColorId: this.getColorId(this.localCard.letterColor, 'Primary Letter'),
+            titleColorId: this.getColorId(this.localCard.titleColor, 'Title'),
+            createDate: this.mode === 'create' ? new Date().toISOString() : this.localCard.createDate,
+            title: this.localCard.title?.trim() || '',
+            content: this.localCard.content?.trim() || '',
+            versicle: this.localCard.versicle?.trim() || null,
         };
+
+        return data;
       }
-    }
+    },
   }
   </script>
   
@@ -371,6 +403,7 @@
     align-items: center;
     gap: 12px;
     position: relative;
+    flex-direction: column;
   }
   
   .combobox-field {
@@ -381,8 +414,16 @@
   .color-preview {
     flex-shrink: 0;
     position: absolute;
-    right: 12px;
+    right: 0;
     top: 35%;
+    transform: translateY(-50%);
+  }
+
+  .color-preview-inner {
+    flex-shrink: 0;
+    position: absolute;
+    right: 5px;
+    top: 50%;
     transform: translateY(-50%);
   }
   

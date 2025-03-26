@@ -87,6 +87,7 @@
       :selected-agenda-id="selectedAgendaId"
       @close="dialog = false"
       @card-created="handleNewCard"
+      @card-updated="handleCardUpdate"
     />
   </v-container>
 </template>
@@ -221,6 +222,13 @@ export default {
       this.items.unshift(newCard);
       this.items.sort((a, b) => new Date(a.createDate) - new Date(b.createDate));
       this.filteredItems = this.groupedCardsByAgenda[this.selectedAgendaId] || [];
+    },
+    handleCardUpdate(updatedCard) {
+      const index = this.items.findIndex(c => c.id === updatedCard.id);
+      if (index >= 0) {
+        this.items.splice(index, 1, updatedCard);
+        this.filteredItems = this.groupedCardsByAgenda[this.selectedAgendaId] || [];
+      }
     }
   },
   mounted() {

@@ -1,5 +1,5 @@
 <template>
-  <v-dialog :value="value" fullscreen persistent>
+  <v-dialog :value="value" fullscreen persistent :key="dialogKey">
     <v-card class="dialog-card">
       
       <v-btn 
@@ -12,10 +12,12 @@
       />
       
       <card-dialog
-        :show="showCreateDialog"
-        :colors="colors"
-        @close="closeCreateDialog"
-        @save="handleCardSave"
+      :show="showCreateDialog"
+      :colors="colors"
+      :initial-data="selectedCard"
+      :mode="editMode ? 'edit' : 'create'"
+      @close="closeCreateDialog"
+      @save="handleCardSave"
       />
 
       <v-btn 
@@ -67,7 +69,7 @@
                 </div>
 
                 <div class="card-header">
-                  <div class="edit-btn">
+                  <div class="edit-btn" @click.stop="openEditDialog(item)">
                     <v-icon>mdi-pencil</v-icon>
                   </div>
 
@@ -152,6 +154,7 @@ import { mapState, mapActions } from 'vuex';
 import CardDialog from './CardDialog.vue';
 import api from '@/plugins/axios';
 import tinycolor from 'tinycolor2';
+import { useNotification } from "@kyvg/vue3-notification";
 
 export default {
   components: { CardDialog },
@@ -167,7 +170,13 @@ export default {
   data() {
     return {
       showCreateDialog: false,
-    }
+      selectedCard: null,
+      editMode: false,
+    };
+  },
+  setup() {
+    const { notify } = useNotification();
+    return { notify };
   },
   computed: {
     ...mapState(['user']),
@@ -175,15 +184,32 @@ export default {
   methods: {
     ...mapActions(['logout']),
     
+    openEditDialog(card) {
+      this.selectedCard = card;
+      this.editMode = true;
+      this.showCreateDialog = true;
+    },
+
+    handleCardSave(cardData) {
+      if (this.editMode) {
+        this.handleCardUpdate(cardData);
+      } else {
+        this.handleCardCreate(cardData);
+      }
+    },
+
     openCreateDialog() {
       this.showCreateDialog = true;
     },
     
     closeCreateDialog() {
       this.showCreateDialog = false;
+      this.editMode = false;
+      this.selectedCard = null;
+      this.originalCard = null;
     },
     
-    async handleCardSave(cardData) {
+    async handleCardCreate(cardData) {
       try {
         const payload = {
           ...cardData,
@@ -193,6 +219,33 @@ export default {
         
         const response = await api.post('/api/Cards', payload);
         this.$emit('card-created', response.data?.data);
+        this.closeCreateDialog();
+        
+      } catch (error) {
+        if (error.response?.status === 401) {
+          this.logout();
+        } else {
+          this.notify({
+            title: 'Error',
+            text: error.response?.data?.Message || 'Error al guardar',
+            type: 'error',
+            duration: 5000
+          });
+        }
+      }
+    },
+
+    async handleCardUpdate(cardData) {
+      try {
+        const payload = {
+          ...cardData,
+          id: this.selectedCard.id,
+          agendaId: this.selectedAgendaId,
+          userId: this.user.id
+        };
+        
+        const response = await api.put('/api/Cards', payload);
+        this.$emit('card-updated', response.data?.data);
         this.closeCreateDialog();
         
       } catch (error) {
