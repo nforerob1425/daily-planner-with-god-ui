@@ -142,6 +142,8 @@
                 <!-- Sección de Favoritos -->
                 <section v-if="user.showFavorites" class="mb-8">
                 <h2 class="text-h4 mb-4 primary--text slide-in-left">⭐ Tarjetas Favoritas</h2>
+                    <v-icon color="primary">mdi-information-outline</v-icon>
+                    <span class="ml-2">Para ver los ultimos cambios vuelve a iniciar la sesion</span>
                 <v-row>
                     <v-col 
                     v-for="(card, index) in user.favoriteCards" 
