@@ -98,7 +98,7 @@ $hover-animation-speed: 1.5s;
     .date-badge {
         position: absolute;
         top: 15px;
-        left: 15px;
+        left: 40px;
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -131,6 +131,8 @@ $hover-animation-speed: 1.5s;
             text-shadow: 
                 0.05em 0.05em 0.1em rgba(0,0,0,0.15),
                 -0.05em -0.05em 0.1em rgba(255,255,255,0.1);
+            left: -15px;
+            position: relative;
         }
     }
 
@@ -193,10 +195,6 @@ $hover-animation-speed: 1.5s;
                 text-shadow: 
                     0.05em 0.05em 0.2em rgba(0,0,0,0.25),
                     -0.05em -0.05em 0.1em rgba(255,255,255,0.15);
-            }
-
-            .favorite-icon {
-                filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
             }
         }
 

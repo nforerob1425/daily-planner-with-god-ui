@@ -96,6 +96,17 @@
                       {{ item.dayCreated }}
                     </span>
                   </div>
+
+                  <v-btn 
+                      icon="mdi-star"
+                      variant="text"
+                      
+                      class="favorite-icon"
+                      :color="item.favorite ? 'yellow' : 'grey'"
+                      @click="setFavorite(item.id); item.favorite = !item.favorite"
+                    >
+                    </v-btn>
+
                 </div>
 
                 <div class="card-content">
@@ -106,12 +117,6 @@
                     >
                       {{ item.title }}
                     </span>
-                    <v-icon 
-                      :color="item.favorite ? 'yellow' : 'grey'"
-                      class="favorite-icon"
-                    >
-                      mdi-star
-                    </v-icon>
                   </v-card-title>
 
                   <v-card-subtitle class="versicle">
@@ -183,6 +188,23 @@ export default {
   },
   methods: {
     ...mapActions(['logout']),
+
+    async setFavorite(cardId){
+      try {
+        await api.patch(`/api/Cards?cardId=${cardId}`);
+      } catch (error) {
+        if (error.response?.status === 401) {
+          this.logout();
+        } else {
+          this.notify({
+            title: 'Error',
+            text: error.response?.data?.Message || 'Error al guardar',
+            type: 'error',
+            duration: 5000
+          });
+        }
+      }
+    },
     
     openEditDialog(card) {
       this.selectedCard = card;
@@ -293,4 +315,11 @@ export default {
 </script>
 
 <style scoped>
+
+.favorite-icon {
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
+  position: absolute;
+  left: 0px;
+  top: 0px;
+}
 </style>
