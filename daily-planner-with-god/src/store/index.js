@@ -31,9 +31,24 @@ export default createStore({
       state.token = null;
       localStorage.removeItem('authData');
       delete api.defaults.headers.common['Authorization'];
+    },
+    UPDATE_USER_CONFIG(state, config) {
+      state.user.configurationId = config.configurationId
+      state.user.configurationName = config.configurationName
+      state.user.showFavorites = config.showFavorites
+      state.user.showPetitions = config.showPetitions
     }
   },
   actions: {
+    async updateUserConfiguration({ commit }, { newConfig, payload }) {
+      try {
+        await api.patch('/api/users',payload)
+        commit('UPDATE_USER_CONFIG', newConfig)
+        return newConfig
+      } catch (error) {
+        commit('SET_ERROR', error.message);
+      }
+    },
     async fetchDatos({ commit }) {
       commit('SET_LOADING', true);
       try {
