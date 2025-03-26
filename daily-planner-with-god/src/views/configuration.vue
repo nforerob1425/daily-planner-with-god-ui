@@ -73,41 +73,30 @@
 
 <script>
 import { mapState } from 'vuex'
+import api from '@/plugins/axios';
 
 export default {
   name: 'configuration-view',
-  computed: {
-    ...mapState(['user']),
-    configurations() {
-      return [
-        {
-          id: "788a03cd-2864-44b2-883a-4d137f737ada",
-          showFavorites: false,
-          showPetitions: false,
-          name: "Default"
-        },
-        {
-          id: "ed187966-ffc8-4897-becc-619cfe584445",
-          showFavorites: true,
-          showPetitions: true,
-          name: "Show all"
-        },
-        {
-          id: "dde063f6-79da-4707-852c-62260ffb82af",
-          showFavorites: false,
-          showPetitions: true,
-          name: "Only petitions"
-        },
-        {
-          id: "24d897b2-e36c-4e3e-a60e-5075535f7352",
-          showFavorites: true,
-          showPetitions: false,
-          name: "Only favorites"
-        }
-      ]
+  data(){
+    return{
+      configurations: []
     }
   },
+  computed: {
+    ...mapState(['user']),
+  },
   methods: {
+    async fetchConfigurations() {
+      try {
+        const response = await api.get(`/api/Configurations`);
+        this.configurations = response.data?.data || [];
+      } catch (error) {
+        console.error('Error fetching items:', error);
+        if (error.response.status === 401) {
+          this.logout();
+        }
+      }
+    },
     async selectConfiguration(config) {
       try {
         const newConfig = {
@@ -146,6 +135,9 @@ export default {
         'grey--text text--darken-1': config.id !== this.user.configurationId
       }
     }
+  },
+  mounted() {
+    this.fetchConfigurations();
   }
 }
 </script>

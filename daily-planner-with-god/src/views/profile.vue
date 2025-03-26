@@ -80,7 +80,7 @@
                       >
                         <div class="d-flex align-center mb-2">
                           <v-icon color="cyan" class="mr-2 pulse">mdi-account-supervisor</v-icon>
-                          <h3 class="text-h6 cyan--text text--accent-3">Información del Lead</h3>
+                          <h3 class="text-h6 cyan--text text--accent-3">Información de tu lider</h3>
                         </div>
   
                         <v-row dense>
