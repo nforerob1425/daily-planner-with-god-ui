@@ -33,7 +33,7 @@
 
 <script>
 export default {
-  name: 'account-view',
+  name: 'dashboard-view',
   data: () => ({
     dialog1: false,
     dialog2: false,

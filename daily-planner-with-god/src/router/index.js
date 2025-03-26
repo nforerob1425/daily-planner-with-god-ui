@@ -11,10 +11,11 @@ const routes = [
     component: () => import('@/layouts/MainLayout.vue'),
     meta: { requiresAuth: true }, // Protección de rutas
     children: [
-      { path: 'account', component: () => import('@/views/account.vue') },
+      { path: 'dashboard', component: () => import('@/views/dashboard.vue') },
       { path: 'planner', component: () => import('@/views/planner.vue') },
       { path: 'configuration', component: () => import('@/views/configuration.vue') },
       { path: 'contact', component: () => import('@/views/contact.vue') },
+      { path: 'profile', component: () => import('@/views/profile.vue') },
     ],
   },
   {

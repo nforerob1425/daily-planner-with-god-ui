@@ -1,5 +1,5 @@
 <template>
-  <v-dialog :value="value" fullscreen persistent :key="dialogKey">
+  <v-dialog :value="value" fullscreen persistent>
     <v-card class="dialog-card">
       
       <v-btn 

@@ -1,0 +1,421 @@
+<template>
+    <v-container class="fill-height" fluid>
+      <v-row justify="center" class="ma-4">
+        <v-col cols="12" md="10" lg="8">
+          <!-- Tarjeta principal con animación de entrada -->
+          <v-fade-transition>
+            <v-card class="profile-card pa-6 rounded-xl elevation-12">
+              <!-- Encabezado con efecto de onda -->
+              <v-slide-y-reverse-transition>
+                <v-row 
+                  align="center" 
+                  class="mb-6 header-gradient py-4 rounded-t-lg"
+                >
+                  <v-col cols="auto">
+                    <v-avatar color="white" size="80" class="elevation-4 floating">
+                      <v-icon size="x-large" color="blue">mdi-account</v-icon>
+                    </v-avatar>
+                  </v-col>
+                  <v-col>
+                    <h1 class="text-h3 font-weight-bold white--text slide-in">
+                      {{ user.firstName }} {{ user.lastName }}
+                    </h1>
+                    <p class="text-subtitle-1 white--text text--lighten-2 fade-in-delay">
+                      @{{ user.username }}
+                    </p>
+                  </v-col>
+                </v-row>
+              </v-slide-y-reverse-transition>
+  
+              <!-- Contenido principal -->
+              <v-card-text>
+                <!-- Información principal con animaciones escalonadas -->
+                <v-row class="mb-6 info-section">
+                  <v-col cols="12" md="6">
+                    <v-slide-x-transition>
+                      <div class="d-flex align-center mb-4 info-item glow-on-hover">
+                        <v-icon color="indigo" large class="mr-3 pulse">mdi-identifier</v-icon>
+                        <div>
+                          <div class="text-caption text-uppercase text-indigo">ID de usuario</div>
+                          <div class="text-body-1 font-weight-medium">{{ user.id }}</div>
+                        </div>
+                      </div>
+                    </v-slide-x-transition>
+  
+                    <v-slide-x-transition>
+                      <div class="d-flex align-center mb-4 info-item glow-on-hover">
+                        <v-icon 
+                          :color="user.isMale ? 'indigo' : 'pink'" 
+                          large 
+                          class="mr-3 pulse"
+                        >
+                          {{ user.isMale ? 'mdi-gender-male' : 'mdi-gender-female' }}
+                        </v-icon>
+                        <div>
+                          <div class="text-caption text-uppercase">Género</div>
+                          <div class="text-body-1 font-weight-medium">
+                            {{ user.isMale ? 'Masculino' : 'Femenino' }}
+                          </div>
+                        </div>
+                      </div>
+                    </v-slide-x-transition>
+                  </v-col>
+  
+                  <v-col cols="12" md="6">
+                    <v-slide-x-reverse-transition>
+                      <div class="d-flex align-center mb-4 info-item glow-on-hover">
+                        <v-icon color="teal" large class="mr-3 pulse">mdi-cog</v-icon>
+                        <div>
+                          <div class="text-caption text-uppercase text-teal">Configuración</div>
+                          <div class="text-body-1 font-weight-medium">{{ user.configurationName }}</div>
+                        </div>
+                      </div>
+                    </v-slide-x-reverse-transition>
+  
+                    <!-- Sección Lead con animación especial -->
+                    <v-fade-transition>
+                      <v-card 
+                        v-if="user.hasLead"
+                        class="mt-4 pa-4 rounded-lg lead-section neon-border"
+                      >
+                        <div class="d-flex align-center mb-2">
+                          <v-icon color="cyan" class="mr-2 pulse">mdi-account-supervisor</v-icon>
+                          <h3 class="text-h6 cyan--text text--accent-3">Información del Lead</h3>
+                        </div>
+  
+                        <v-row dense>
+                          <v-col cols="12" md="6">
+                            <div class="d-flex align-center">
+                              <v-icon color="cyan" class="mr-2">mdi-account</v-icon>
+                              <div>
+                                <div class="text-caption cyan--text">Nombre completo</div>
+                                <div class="text-body-1 font-weight-medium cyan--text text--darken-1">
+                                  {{ user.leadFirstname }} {{ user.leadLastName }}
+                                </div>
+                              </div>
+                            </div>
+                          </v-col>
+  
+                          <v-col cols="12" md="6">
+                            <div class="d-flex align-center">
+                              <v-icon 
+                                :color="user.isMaleLead ? 'cyan' : 'pink'" 
+                                class="mr-2"
+                              >
+                                {{ user.isMaleLead ? 'mdi-gender-male' : 'mdi-gender-female' }}
+                              </v-icon>
+                              <div>
+                                <div class="text-caption cyan--text">Género</div>
+                                <div class="text-body-1 font-weight-medium cyan--text text--darken-1">
+                                  {{ user.isMaleLead ? 'Masculino' : 'Femenino' }}
+                                </div>
+                              </div>
+                            </div>
+                          </v-col>
+                        </v-row>
+                      </v-card>
+                    </v-fade-transition>
+                  </v-col>
+                </v-row>
+  
+                <!-- Estadísticas con animación de escalado -->
+                <v-row class="mb-6 stats-container">
+                  <v-col cols="12" md="4">
+                      <v-card elevation="3"
+                        class="stat-card primary-gradient pa-4 rounded-lg scale-in"
+                      >
+                        <div class="text-h5 white--text">Tarjetas creadas</div>
+                        <div class="text-h2 font-weight-bold white--text">{{ user.totalCardsCreated }}</div>
+                      </v-card>
+                  </v-col>
+                  
+                  <v-col cols="12" md="4" v-if="user.totalCardsReported > 0">
+                      <v-card elevation="3"
+                        class="stat-card error-gradient pa-4 rounded-lg scale-in-delay"
+                      >
+                        <div class="text-h5 white--text">Reportes recibidos</div>
+                        <div class="text-h2 font-weight-bold white--text">{{ user.totalCardsReported }}</div>
+                      </v-card>
+                  </v-col>
+                </v-row>
+  
+                <!-- Sección de Favoritos -->
+                <section v-if="user.showFavorites" class="mb-8">
+                <h2 class="text-h4 mb-4 primary--text slide-in-left">⭐ Tarjetas Favoritas</h2>
+                <v-row>
+                    <v-col 
+                    v-for="(card, index) in user.favoriteCards" 
+                    :key="card.id" 
+                    cols="12" 
+                    md="6"
+                    >
+                    <v-slide-y-transition :delay="index * 100">
+                        <v-card 
+                        class="custom-card hover-3d"
+                        :style="{
+                            backgroundColor: card.primaryColor,
+                            color: card.letterColor
+                        }"
+                        >
+                        <div class="card-header">
+                            <div class="date-badge">
+                            <div class="month" :style="{ color: card.letterDateColor }">
+                                {{ card.monthCreated + `-` + card.createDate }}
+                            </div>
+                            <div 
+                                class="day"
+                                :style="{
+                                backgroundColor: card.primaryColorDate,
+                                color: card.letterDateColor
+                                }"
+                            >
+                                {{ card.dayCreated }}
+                            </div>
+                            </div>
+                        </div>
+
+                        <div class="card-content">
+                            <div class="card-title">
+                            <span class="title-text" :style="{ color: card.titleColor }">
+                                {{ card.title }}
+                            </span>
+                            </div>
+                            
+                            <div class="content">
+                            {{ card.content }}
+                            </div>
+
+                            <div v-if="card.versicle" class="versicle">
+                            <v-icon small :color="card.titleColor">mdi-book</v-icon>
+                            <span>{{ card.versicle }}</span>
+                            </div>
+                        </div>
+                        </v-card>
+                    </v-slide-y-transition>
+                    </v-col>
+                </v-row>
+                </section>
+  
+                <!-- Sección de Peticiones -->
+                <section v-if="user.showPetitions" class="mb-8">
+                <h2 class="text-h4 mb-4 primary--text slide-in-left-delay">📋 Peticiones Activas</h2>
+                <v-fade-transition>
+                    <v-card elevation="1" class="pa-4 rounded-lg mock-section hover-3d">
+                    <div class="text-center mt-4 text-body-1">
+                        <v-icon color="primary">mdi-information-outline</v-icon>
+                        <span class="ml-2">Próximamente podrás ver todas tus peticiones activas aquí</span>
+                        <div class="text-caption mb-2">Actualmente en desarrollo 🚀</div>
+                    </div>
+                    <v-row>
+                        <v-col cols="12" md="6" v-for="n in 2" :key="n">
+                        <v-card elevation="3" class="pa-4 rounded-lg mock-card">
+                            <div class="d-flex align-center mb-2">
+                            <v-skeleton-loader type="avatar" class="mr-3"></v-skeleton-loader>
+                            <v-skeleton-loader type="heading" width="60%"></v-skeleton-loader>
+                            </div>
+                            <v-skeleton-loader type="paragraph"></v-skeleton-loader>
+                            <v-row class="mt-2" dense>
+                            <v-col cols="6">
+                                <v-skeleton-loader type="text" width="80%"></v-skeleton-loader>
+                            </v-col>
+                            <v-col cols="6">
+                                <v-skeleton-loader type="text" width="60%"></v-skeleton-loader>
+                            </v-col>
+                            </v-row>
+                        </v-card>
+                        </v-col>
+                    </v-row>
+                    </v-card>
+                </v-fade-transition>
+                </section>
+              </v-card-text>
+            </v-card>
+          </v-fade-transition>
+        </v-col>
+      </v-row>
+    </v-container>
+  </template>
+  
+  <script>
+  import { mapState } from 'vuex';
+  
+  export default {
+    name: 'ProfileView',
+    computed: {
+      ...mapState({
+        user: state => state.user
+      })
+    }
+  };
+  </script>
+  
+  <style scoped>
+  .profile-card {
+    background: #FFFFFF;
+    box-shadow: 
+      0 12px 24px rgba(30, 144, 255, 0.15),
+      0 0 40px rgba(30, 144, 255, 0.05) !important;
+    transform: translateY(0);
+    transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+  
+  .profile-card:hover {
+    box-shadow: 
+      0 20px 40px rgba(30, 144, 255, 0.2),
+      0 0 60px rgba(30, 144, 255, 0.1) !important;
+  }
+  
+  .header-gradient {
+    background: linear-gradient(
+      135deg,
+      rgba(30, 144, 255, 1) 0%,
+      rgba(75, 0, 130, 0.9) 100%
+    ) !important;
+    position: relative;
+    overflow: hidden;
+    color: #FFFFFF;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+  
+  .header-gradient::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      45deg,
+      transparent 25%,
+      rgba(255,255,255,0.1) 50%,
+      transparent 75%
+    );
+    animation: wave 8s infinite linear;
+    opacity: 0.3;
+  }
+  
+  @keyframes wave {
+    0% { transform: rotate(0deg) translate(-50%, -50%); }
+    100% { transform: rotate(360deg) translate(-50%, -50%); }
+  }
+  
+  .neon-border {
+    border: 2px solid rgba(0, 255, 255, 0.3);
+    box-shadow: 
+      0 0 15px rgba(0, 255, 255, 0.2),
+      inset 0 0 10px rgba(0, 255, 255, 0.1);
+    animation: neon-pulse 2s infinite alternate;
+  }
+  
+  @keyframes neon-pulse {
+    from { box-shadow: 0 0 10px rgba(0, 255, 255, 0.2); }
+    to { box-shadow: 0 0 20px rgba(0, 255, 255, 0.4); }
+  }
+  
+  .hover-3d {
+    transition: 
+      transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1),
+      box-shadow 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+  
+  .hover-3d:hover {
+    transform: 
+      translateY(-5px)
+      rotateX(2deg)
+      rotateY(2deg)
+      perspective(1000px);
+    box-shadow: 
+      0 15px 30px rgba(0,0,0,0.2),
+      0 0 40px rgba(30, 144, 255, 0.1) !important;
+  }
+  
+  .floating {
+    animation: float 4s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+  }
+  
+  .pulse {
+    animation: pulse 2s infinite;
+  }
+  
+  @keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+  
+  .glow-on-hover:hover {
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 0 15px rgba(30, 144, 255, 0.2);
+  }
+  
+  .scale-in {
+    animation: scaleIn 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+  }
+  
+  .scale-in-delay {
+    animation: scaleIn 0.6s 0.2s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards;
+    opacity: 0;
+  }
+  
+  @keyframes scaleIn {
+    from { 
+      transform: scale(0.9);
+      opacity: 0;
+    }
+    to { 
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  
+  .slide-in {
+    animation: slideIn 0.8s ease-out;
+  }
+  
+  @keyframes slideIn {
+    from { 
+      transform: translateX(-50px);
+      opacity: 0;
+    }
+    to { 
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  .fade-in-delay {
+    animation: fadeIn 1s 0.3s forwards;
+    opacity: 0;
+  }
+  
+  @keyframes fadeIn {
+    to { opacity: 1; }
+  }
+  
+  .slide-in-left {
+    animation: slideInLeft 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  @keyframes slideInLeft {
+    from { 
+      transform: translateX(-100px);
+      opacity: 0;
+    }
+    to { 
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+  
+  .slide-in-left-delay {
+    animation: slideInLeft 0.8s 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    opacity: 0;
+  }
+  </style>

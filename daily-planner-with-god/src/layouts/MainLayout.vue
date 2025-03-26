@@ -3,25 +3,23 @@
     <!-- Barra superior -->
     <v-app-bar color="primary" dark app>
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-toolbar-title>Mi tiempo con Dios</v-toolbar-title>
+      
       <v-spacer></v-spacer>
 
       <!-- Avatar y menú desplegable -->
       <v-menu v-model:open="menuVisible" offset-y>
         <template v-slot:activator="{ props }">
-          <v-btn icon v-bind="props">
-            <v-avatar color="secondary" size="40">
-              <v-icon dark>mdi-account</v-icon>
-            </v-avatar>
+          <v-btn v-bind="props">
+            {{ this.fullName }}
           </v-btn>
         </template>
 
         <v-list>
-          <v-list-item @click="cambiarContraseña">
-              <v-list-item-title>Cambiar contraseña</v-list-item-title>
-          </v-list-item>
           <v-list-item @click="cerrarSesion">
-              <v-list-item-title>Cerrar sesión</v-list-item-title>
+            <template v-slot:prepend>
+              <v-icon>mdi-logout</v-icon>
+            </template>
+            <v-list-item-title>Cerrar sesión</v-list-item-title>
           </v-list-item>
         </v-list>
       </v-menu>
@@ -46,7 +44,7 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex';
+import { mapActions, mapState } from 'vuex';
 
 export default {
   name: 'MainLayout',
@@ -54,21 +52,19 @@ export default {
     return {
       menuVisible: false,
       drawer: false,
+      fullName: '',
       menuItems: [
-        { title: 'Cuenta', icon: 'mdi-account', route: '/account' },
         { title: 'R07', icon: 'mdi-file-document', route: '/planner' },
+        { title: 'Ver perfil', icon: 'mdi-account', route: '/profile' },
         { title: 'Configuración', icon: 'mdi-cog', route: '/configuration' },
+        { title: 'Dashboard', icon: 'mdi-view-dashboard', route: '/dashboard' },
         { title: 'Contactar', icon: 'mdi-email', route: '/contact' },
       ],
     };
   },
   methods: {
     ...mapActions(['logout']),
-    
-    cambiarContraseña() {
-      alert('Cambiar contraseña');
-    },
-    
+
     async cerrarSesion() {
       try {
         await this.logout();
@@ -79,6 +75,12 @@ export default {
       }
     }
   },
+  computed: {
+    ...mapState(['user'])
+  },
+  mounted() {
+    this.fullName = `${this.user?.firstName || ''} ${this.user?.lastName || ''}`.trim();
+  }
 };
 </script>
 
