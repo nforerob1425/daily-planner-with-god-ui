@@ -195,7 +195,7 @@
                       <v-card elevation="3"
                         class="stat-card primary-gradient pa-4 rounded-lg scale-in"
                       >
-                        <div class="text-h5 white--text">Tarjetas creadas</div>
+                        <div class="text-h5 white--text">Tarjetas creadas por ti</div>
                         <div class="text-h2 font-weight-bold white--text">{{ this.totalCardsCreated }}</div>
                       </v-card>
                   </v-col>
@@ -204,7 +204,7 @@
                       <v-card elevation="3"
                         class="stat-card error-gradient pa-4 rounded-lg scale-in-delay"
                       >
-                        <div class="text-h5 white--text">Reportes recibidos</div>
+                        <div class="text-h5 white--text">Tarjetas de tus ovejas</div>
                         <div class="text-h2 font-weight-bold white--text">{{ this.totalCardsReported }}</div>
                       </v-card>
                   </v-col>

@@ -129,7 +129,8 @@ export default {
         background: isActive 
           ? 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)' 
           : 'linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%)',
-        transform: isActive ? 'scale(1.02)' : 'scale(1)'
+        transform: isActive ? 'scale(1.02)' : 'scale(1)',
+        color: isActive ? '#ffffff' : '#000000'
       }
     },
     textClass(config) {
