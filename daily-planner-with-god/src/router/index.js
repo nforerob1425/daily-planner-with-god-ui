@@ -16,6 +16,10 @@ const routes = [
       { path: 'configuration', component: () => import('@/views/configuration.vue') },
       { path: 'contact', component: () => import('@/views/contact.vue') },
       { path: 'profile', component: () => import('@/views/profile.vue') },
+      { path: 'home', component: () => import('@/views/home.vue') },
+      { path: 'petitions', component: () => import('@/views/petitions.vue') },
+      { path: 'users', component: () => import('@/views/users.vue') },
+      { path: 'application', component: () => import('@/views/application.vue') },
     ],
   },
   {

@@ -4,7 +4,7 @@
       <v-row no-gutters>
         <v-col cols="12" md="6" class="hidden-sm-and-down">
           <v-img
-            src="/assets/backgrounds/login.jpg"
+            src="/assets/backgrounds/Daily-planner-logo.webp"
             height="100% !important"
             cover
             class="img-animate"

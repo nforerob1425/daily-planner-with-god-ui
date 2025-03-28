@@ -1,7 +1,6 @@
 ``<template>
-  <v-container fluid class="fill-height d-flex align-center justify-center">
-    <v-card class="pa-5 mx-auto text-center sunken-card">
-      <v-card-title class="text-h3 font-weight-bold">Bienvenido - {{ fullName }}</v-card-title>
+  <v-container fluid class="fill-height d-flex align-center justify-center ">
+    <v-card class="pa-5 mx-auto text-center sunken-card config-view">
       <v-card-text class="text-h6">
         <v-container>
           <!-- Libros Propios -->
@@ -240,6 +239,7 @@ export default {
 </script>
 
 <style scoped>
+
 /* Contenedor principal */
 .book-wrapper {
   position: relative;

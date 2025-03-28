@@ -1,5 +1,5 @@
 <template>
-    <v-container class="fill-height" fluid>
+    <v-container class="fill-height config-view " fluid>
       <v-row justify="center" class="ma-4">
         <v-col cols="12" md="10" lg="8">
           <!-- Tarjeta principal con animación de entrada -->
@@ -13,15 +13,22 @@
                 >
                   <v-col cols="auto">
                     <v-avatar color="white" size="80" class="elevation-4 floating">
-                      <v-icon size="x-large" color="blue">mdi-account</v-icon>
+                      <v-icon size="x-large" color="blue">
+                        <v-img
+                          src="/assets/backgrounds/Daily-planner-logo.png"
+                          alt="logo"
+                          class="daily-logo"
+                        >
+                        </v-img>
+                      </v-icon>
                     </v-avatar>
                   </v-col>
                   <v-col>
                     <h1 class="text-h3 font-weight-bold white--text slide-in">
-                      {{ user.firstName }} {{ user.lastName }}
+                      {{ this.fullName }}
                     </h1>
                     <p class="text-subtitle-1 white--text text--lighten-2 fade-in-delay">
-                      @{{ user.username }}
+                      @{{ this.username }}
                     </p>
                   </v-col>
                 </v-row>
@@ -37,7 +44,7 @@
                         <v-icon color="indigo" large class="mr-3 pulse">mdi-identifier</v-icon>
                         <div>
                           <div class="text-caption text-uppercase text-indigo">ID de usuario</div>
-                          <div class="text-body-1 font-weight-medium">{{ user.id }}</div>
+                          <div class="text-body-1 font-weight-medium">{{ this.id }}</div>
                         </div>
                       </div>
                     </v-slide-x-transition>
@@ -45,16 +52,16 @@
                     <v-slide-x-transition>
                       <div class="d-flex align-center mb-4 info-item glow-on-hover">
                         <v-icon 
-                          :color="user.isMale ? 'indigo' : 'pink'" 
+                          :color="this.isMale ? 'indigo' : 'pink'" 
                           large 
                           class="mr-3 pulse"
                         >
-                          {{ user.isMale ? 'mdi-gender-male' : 'mdi-gender-female' }}
+                          {{ this.isMale ? 'mdi-gender-male' : 'mdi-gender-female' }}
                         </v-icon>
                         <div>
                           <div class="text-caption text-uppercase">Género</div>
                           <div class="text-body-1 font-weight-medium">
-                            {{ user.isMale ? 'Masculino' : 'Femenino' }}
+                            {{ this.isMale ? 'Masculino' : 'Femenino' }}
                           </div>
                         </div>
                       </div>
@@ -67,7 +74,7 @@
                         <v-icon color="teal" large class="mr-3 pulse">mdi-cog</v-icon>
                         <div>
                           <div class="text-caption text-uppercase text-teal">Configuración</div>
-                          <div class="text-body-1 font-weight-medium">{{ user.configurationName }}</div>
+                          <div class="text-body-1 font-weight-medium">{{ this.configurationName }}</div>
                         </div>
                       </div>
                     </v-slide-x-reverse-transition>
@@ -75,7 +82,7 @@
                     <!-- Sección Lead con animación especial -->
                     <v-fade-transition>
                       <v-card 
-                        v-if="user.hasLead"
+                        v-if="this.hasLead"
                         class="mt-4 pa-4 rounded-lg lead-section neon-border"
                       >
                         <div class="d-flex align-center mb-2">
@@ -90,7 +97,7 @@
                               <div>
                                 <div class="text-caption cyan--text">Nombre completo</div>
                                 <div class="text-body-1 font-weight-medium cyan--text text--darken-1">
-                                  {{ user.leadFirstname }} {{ user.leadLastName }}
+                                  {{ this.leadFirstname }} {{ this.leadLastName }}
                                 </div>
                               </div>
                             </div>
@@ -99,15 +106,15 @@
                           <v-col cols="12" md="6">
                             <div class="d-flex align-center">
                               <v-icon 
-                                :color="user.isMaleLead ? 'cyan' : 'pink'" 
+                                :color="this.isMaleLead ? 'cyan' : 'pink'" 
                                 class="mr-2"
                               >
-                                {{ user.isMaleLead ? 'mdi-gender-male' : 'mdi-gender-female' }}
+                                {{ this.isMaleLead ? 'mdi-gender-male' : 'mdi-gender-female' }}
                               </v-icon>
                               <div>
                                 <div class="text-caption cyan--text">Género</div>
                                 <div class="text-body-1 font-weight-medium cyan--text text--darken-1">
-                                  {{ user.isMaleLead ? 'Masculino' : 'Femenino' }}
+                                  {{ this.isMaleLead ? 'Masculino' : 'Femenino' }}
                                 </div>
                               </div>
                             </div>
@@ -125,28 +132,28 @@
                         class="stat-card primary-gradient pa-4 rounded-lg scale-in"
                       >
                         <div class="text-h5 white--text">Tarjetas creadas</div>
-                        <div class="text-h2 font-weight-bold white--text">{{ user.totalCardsCreated }}</div>
+                        <div class="text-h2 font-weight-bold white--text">{{ this.totalCardsCreated }}</div>
                       </v-card>
                   </v-col>
                   
-                  <v-col cols="12" md="4" v-if="user.totalCardsReported > 0">
+                  <v-col cols="12" md="4" v-if="this.totalCardsReported > 0">
                       <v-card elevation="3"
                         class="stat-card error-gradient pa-4 rounded-lg scale-in-delay"
                       >
                         <div class="text-h5 white--text">Reportes recibidos</div>
-                        <div class="text-h2 font-weight-bold white--text">{{ user.totalCardsReported }}</div>
+                        <div class="text-h2 font-weight-bold white--text">{{ this.totalCardsReported }}</div>
                       </v-card>
                   </v-col>
                 </v-row>
   
                 <!-- Sección de Favoritos -->
-                <section v-if="user.showFavorites" class="mb-8">
+                <section v-if="this.showFavorites" class="mb-8">
                 <h2 class="text-h4 mb-4 primary--text slide-in-left">⭐ Tarjetas Favoritas</h2>
                     <v-icon color="primary">mdi-information-outline</v-icon>
                     <span class="ml-2">Para ver los ultimos cambios vuelve a iniciar la sesion</span>
                 <v-row>
                     <v-col 
-                    v-for="(card, index) in user.favoriteCards" 
+                    v-for="(card, index) in this.favoriteCards" 
                     :key="card.id" 
                     cols="12" 
                     md="6"
@@ -199,7 +206,7 @@
                 </section>
   
                 <!-- Sección de Peticiones -->
-                <section v-if="user.showPetitions" class="mb-8">
+                <section v-if="this.showPetitions" class="mb-8">
                 <h2 class="text-h4 mb-4 primary--text slide-in-left-delay">📋 Peticiones Activas</h2>
                 <v-fade-transition>
                     <v-card elevation="1" class="pa-4 rounded-lg mock-section hover-3d">
@@ -238,20 +245,60 @@
     </v-container>
   </template>
   
-  <script>
+<script>
   import { mapState } from 'vuex';
-  
+
   export default {
     name: 'ProfileView',
     computed: {
-      ...mapState({
-        user: state => state.user
-      })
+      ...mapState(['user']),
+      fullName() {
+        return `${this.user?.firstName || ''} ${this.user?.lastName || ''}`.trim();
+      },
+      username() {
+        return this.user?.username || '';
+      },
+      id(){
+        return this.user?.id || '';
+      },
+      isMale(){
+        return this.user?.isMale || false;
+      },
+      configurationName(){
+        return this.user?.configurationName || '';
+      },
+      hasLead(){
+        return this.user?.hasLead || false;
+      },
+      leadFirstname(){
+        return this.user?.leadFirstname || '';
+      },
+      leadLastname(){
+        return this.user?.leadLastname || '';
+      },
+      isMaleLead(){
+        return this.user?.isMaleLead || false;
+      },
+      totalCardsCreated(){
+        return this.user?.totalCardsCreated || 0;
+      },
+      totalCardsReported(){
+        return this.user?.totalCardsReported || 0;
+      },
+      showFavorites(){
+        return this.user?.showFavorites || false;
+      },
+      favoriteCards(){
+        return this.user?.favoriteCards || [];
+      },
+      showPetitions(){
+        return this.user?.showPetitions || false;
+      }
     }
   };
-  </script>
+</script>
   
-  <style scoped>
+<style scoped>
   .profile-card {
     background: #FFFFFF;
     box-shadow: 
@@ -419,5 +466,12 @@
   .slide-in-left-delay {
     animation: slideInLeft 0.8s 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
     opacity: 0;
+  }
+
+  .daily-logo {
+    width: 80px;
+    height: 85px;
+    position: fixed;
+    top: -3px;
   }
   </style>

@@ -13,7 +13,7 @@
           >
             <v-card 
               class="config-card"
-              :class="{ 'active-config': config.id === user.configurationId }"
+              :class="{ 'active-config': config.id === this.configurationId }"
               @click="selectConfiguration(config)"
               :style="cardStyle(config)"
             >
@@ -21,10 +21,10 @@
                 <div class="header">
                   <v-icon 
                     large 
-                    :color="config.id === user.configurationId ? 'white' : 'grey lighten-1'"
+                    :color="config.id === this.configurationId ? 'white' : 'grey lighten-1'"
                     class="selection-icon"
                   >
-                    mdi-{{ config.id === user.configurationId ? 'check-circle' : 'checkbox-blank-circle-outline' }}
+                    mdi-{{ config.id === this.configurationId ? 'check-circle' : 'checkbox-blank-circle-outline' }}
                   </v-icon>
                   <h2 class="text-h5">{{ config.name }}</h2>
                 </div>
@@ -62,7 +62,7 @@
                 </div>
               </div>
 
-              <div class="active-overlay" v-if="config.id === user.configurationId"></div>
+              <div class="active-overlay" v-if="config.id === this.configurationId"></div>
             </v-card>
           </v-col>
         </v-row>
@@ -84,6 +84,9 @@ export default {
   },
   computed: {
     ...mapState(['user']),
+    configurationId() {
+      return `${this.user?.configurationId || ''} ${this.user?.configurationId || ''}`.trim();
+    },
   },
   methods: {
     async fetchConfigurations() {
@@ -144,9 +147,7 @@ export default {
 
 <style scoped>
 /* Mantener los mismos estilos del archivo anterior */
-.config-view {
-  background: linear-gradient(45deg, #f8f9fa 0%, #e9ecef 100%);
-}
+
 
 .gradient-text {
   background: linear-gradient(45deg, #1e3c72, #2a5298);
