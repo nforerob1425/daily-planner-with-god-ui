@@ -45,7 +45,7 @@ export default {
         { title: 'Peticiones de oración', icon: 'mdi-clipboard-text', route: '/petitions' },
         { title: 'Perfil', icon: 'mdi-account', route: '/profile' },
         { title: 'Configuración', icon: 'mdi-cog', route: '/configuration' },
-        { title: 'Solicitudes', icon: 'mdi-email', route: '/contact' },
+        { title: 'Solicitudes', icon: 'mdi-gmail', route: '/contact' },
         { title: 'Usuarios', icon: 'mdi-account-multiple-plus', route: '/users' },
         { title: 'Dashboard', icon: 'mdi-view-dashboard', route: '/dashboard' },
         { title: 'Admin. Aplicación', icon: 'mdi-application', route: '/application' },
