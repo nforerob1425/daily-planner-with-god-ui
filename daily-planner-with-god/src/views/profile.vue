@@ -34,6 +34,70 @@
                 </v-row>
               </v-slide-y-reverse-transition>
   
+              <!-- Botón de cambiar contraseña -->
+              <v-slide-y-transition>
+                <v-btn 
+                  color="blue darken-2" 
+                  class="mt-4 pulse" 
+                  @click="showPasswordDialog = true"
+                  dark
+                  elevation="4"
+                >
+                  <v-icon left>mdi-key-change</v-icon>
+                  Cambiar Contraseña
+                </v-btn>
+              </v-slide-y-transition>
+
+              <!-- Diálogo de cambio de contraseña -->
+              <v-dialog 
+                v-model="showPasswordDialog" 
+                max-width="500" 
+                transition="scale-transition"
+              >
+                <v-card class="rounded-xl pa-6 password-dialog">
+                  <v-card-title class="text-h5 primary--text mb-4 slide-in">
+                    <v-icon color="primary" class="mr-2">mdi-lock-reset</v-icon>
+                    Cambiar Contraseña
+                  </v-card-title>
+
+                  <v-card-text>
+                    <v-form @submit.prevent="changePassword">
+                      <v-text-field
+                        v-model="newPassword"
+                        :type="showPassword ? 'password' : 'text'"
+                        label="Nueva Contraseña"
+                        outlined
+                        color="blue"
+                        class="mb-4"
+                        :append-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                        @click:append="showPassword = !showPassword"
+                      ></v-text-field>
+
+                      <v-text-field
+                        v-model="confirmPassword"
+                        type="password"
+                        label="Confirmar Contraseña"
+                        outlined
+                        color="blue"
+                        class="mb-4"
+                        :error-messages="passwordError"
+                      ></v-text-field>
+
+                      <v-btn 
+                        block 
+                        color="primary" 
+                        type="submit" 
+                        :disabled="!passwordsMatch"
+                        class="elevation-4 pulse"
+                      >
+                        <v-icon left>mdi-check-circle</v-icon>
+                        Confirmar Cambio
+                      </v-btn>
+                    </v-form>
+                  </v-card-text>
+                </v-card>
+              </v-dialog>
+
               <!-- Contenido principal -->
               <v-card-text>
                 <!-- Información principal con animaciones escalonadas -->
@@ -246,10 +310,24 @@
   </template>
   
 <script>
-  import { mapState } from 'vuex';
+  import { mapState, mapActions } from 'vuex';
+  import { useNotification } from "@kyvg/vue3-notification";
+  import api from '@/plugins/axios';
 
   export default {
     name: 'ProfileView',
+    data() {
+      return {
+        showPasswordDialog: false,
+        newPassword: '',
+        confirmPassword: '',
+        showPassword: true
+      }
+    },
+    setup() {
+      const { notify } = useNotification();
+      return { notify };
+    },
     computed: {
       ...mapState(['user']),
       fullName() {
@@ -273,8 +351,8 @@
       leadFirstname(){
         return this.user?.leadFirstname || '';
       },
-      leadLastname(){
-        return this.user?.leadLastname || '';
+      leadLastName(){
+        return this.user?.leadLastName || '';
       },
       isMaleLead(){
         return this.user?.isMaleLead || false;
@@ -293,6 +371,49 @@
       },
       showPetitions(){
         return this.user?.showPetitions || false;
+      },
+      passwordsMatch() {
+        return this.newPassword === this.confirmPassword && this.newPassword.length >= 6
+      },
+      passwordError() {
+        if (this.confirmPassword && !this.passwordsMatch) {
+          return 'Las contraseñas deben coincidir y tener al menos 6 caracteres'
+        }
+        return ''
+      }
+    },
+    methods: {
+      ...mapActions(['logout']),
+      async changePassword() {
+        try {
+          const payload = {
+            newPassword: this.newPassword,
+            userId: this.user.id
+          };
+          
+          const response = await api.post('/api/Password', payload);
+          this.notify({
+              title: 'Success',
+              text: response.data?.message || '',
+              type: 'success',
+              duration: 5000
+            });      
+        } catch (error) {
+          if (error.response?.status === 401) {
+            this.logout();
+          } else {
+            this.notify({
+              title: 'Error',
+              text: error.response?.data?.Message || 'Error al guardar',
+              type: 'error',
+              duration: 5000
+            });
+          }
+        }
+
+        this.showPasswordDialog = false
+        this.newPassword = ''
+        this.confirmPassword = ''
       }
     }
   };
@@ -474,4 +595,24 @@
     position: fixed;
     top: -3px;
   }
+
+.password-dialog {
+  background: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+  box-shadow: 
+    0 12px 24px rgba(30, 144, 255, 0.15),
+    0 0 40px rgba(30, 144, 255, 0.05) !important;
+  border: 2px solid rgba(30, 144, 255, 0.1);
+}
+
+.password-dialog .v-card__title {
+  border-bottom: 2px solid rgba(30, 144, 255, 0.2);
+}
+
+.password-dialog .v-input__slot {
+  transition: all 0.3s ease;
+}
+
+.password-dialog .v-input__slot:hover {
+  transform: translateY(-2px);
+}
   </style>
