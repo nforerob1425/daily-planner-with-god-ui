@@ -29,7 +29,12 @@
       ></v-btn>
       
       <v-container fluid class="pa-5 dialog-container">
-        <div v-for="month in groupedByMonth" :key="month.name" class="month-section">
+        <div 
+          v-for="month in groupedByMonth" 
+          :key="month.name" 
+          :id="'month-' + month.name" 
+          class="month-section"
+        >
           <v-row class="month-header sticky-header">
             <v-col cols="12">
               <h2 class="text-h4 font-weight-bold month-title">
@@ -37,6 +42,16 @@
                 <v-chip class="ml-2" color="primary">
                   {{ month.items.length }}
                 </v-chip>
+                <v-btn 
+                  v-if="month.items.length > 0"
+                  @click="generateMonthPDF(month.name)"
+                  color="secondary"
+                  class="ml-2"
+                  size="small"
+                >
+                  <v-icon left>mdi-download</v-icon>
+                  PDF
+                </v-btn>
               </h2>
             </v-col>
           </v-row>
@@ -160,6 +175,8 @@ import CardDialog from './CardDialog.vue';
 import api from '@/plugins/axios';
 import tinycolor from 'tinycolor2';
 import { useNotification } from "@kyvg/vue3-notification";
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 export default {
   components: { CardDialog },
@@ -188,6 +205,56 @@ export default {
   },
   methods: {
     ...mapActions(['logout']),
+
+    async generateMonthPDF(monthName) {
+      try {
+        const element = document.getElementById(`month-${monthName}`);
+        console.log(element);
+        if (!element) return;
+
+        // Mostrar carga
+        this.notify({
+          title: 'Generando PDF',
+          text: 'Por favor espere...',
+          type: 'info',
+          duration: 2000
+        });
+
+        const canvas = await html2canvas(element, {
+          scale: 2,
+          useCORS: true,
+          logging: true,
+          backgroundColor: null
+        });
+
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const ratio = canvas.width / canvas.height;
+        
+        let imgWidth = pageWidth;
+        let imgHeight = pageWidth / ratio;
+
+        if (imgHeight > pageHeight) {
+          imgHeight = pageHeight;
+          imgWidth = pageHeight * ratio;
+        }
+
+        const x = (pageWidth - imgWidth) / 2;
+        const y = (pageHeight - imgHeight) / 2;
+
+        pdf.addImage(canvas, 'PNG', x, y, imgWidth, imgHeight);
+        pdf.save(`${this.getSpanishMonth(monthName)}.pdf`);
+
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        this.notify({
+          title: 'Error',
+          text: 'No se pudo generar el PDF',
+          type: 'error'
+        });
+      }
+    },
 
     async setFavorite(cardId){
       try {
@@ -321,5 +388,27 @@ export default {
   position: absolute;
   left: 0px;
   top: 0px;
+}
+
+.month-section {
+  position: relative;
+  background: white;
+  margin-bottom: 2rem;
+  page-break-inside: avoid; /* Para mejor renderizado en PDF */
+}
+
+.pdf-btn {
+  position: relative;
+  z-index: 2;
+}
+
+/* Mejora la renderización para html2canvas */
+.custom-card {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+.border-effect {
+  display: none; /* Opcional: si causa problemas en el PDF */
 }
 </style>
