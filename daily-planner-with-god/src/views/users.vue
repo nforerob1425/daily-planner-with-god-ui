@@ -300,6 +300,7 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex';
 import api from '@/plugins/axios';
 import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog.vue';
 
@@ -377,6 +378,7 @@ export default {
     await this.initializeData();
   },
   methods: {
+    ...mapActions(['logout']),
     async initializeData() {
       this.isLoading = true;
       try {
