@@ -147,8 +147,6 @@ export default {
 </script>
 
 <style scoped>
-/* Mantener los mismos estilos del archivo anterior */
-
 
 .gradient-text {
   background: linear-gradient(45deg, #1e3c72, #2a5298);

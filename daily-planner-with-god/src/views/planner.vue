@@ -84,9 +84,12 @@
       :current-user-full-name="fullName"
       :colors="colors"
       :selected-agenda-id="selectedAgendaId"
+      :has-items-reported="hasItemsToReported"
       @close="dialog = false"
       @card-created="handleNewCard"
       @card-updated="handleCardUpdate"
+      @card-deleted="handleDeleteCard"
+      @planner-reported="plannerReported"
     />
   </v-container>
 </template>
@@ -125,6 +128,9 @@ export default {
     },
     reportedItems() {
       return this.data?.filter(item => item.isReported) || [];
+    },
+    hasItemsToReported(){
+      return this.items?.filter(item => !item.reported).length > 0 || false;
     },
     processedOwnItems() {
       return this.ownItems.filter(agenda => 
@@ -228,6 +234,15 @@ export default {
         this.items.splice(index, 1, updatedCard);
         this.filteredItems = this.groupedCardsByAgenda[this.selectedAgendaId] || [];
       }
+    },
+    handleDeleteCard(deletedCard) {
+      this.items = this.items.filter(obj => obj !== deletedCard);
+      this.filteredItems = this.groupedCardsByAgenda[this.selectedAgendaId] || [];
+    }
+    ,
+    async plannerReported() {
+      await this.fetchItems();
+      this.filteredItems = this.groupedCardsByAgenda[this.selectedAgendaId] || [];
     }
   },
   mounted() {

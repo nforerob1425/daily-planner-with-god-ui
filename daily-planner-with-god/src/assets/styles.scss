@@ -82,6 +82,16 @@ $hover-animation-speed: 1.5s;
             opacity: 1;
             transform: translateY(0);
         }
+
+        .delete-btn {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .report-ok-btn {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     // Encabezado
@@ -171,6 +181,65 @@ $hover-animation-speed: 1.5s;
         }
     }
 
+    .report-ok-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        width: $edit-btn-size;
+        height: $edit-btn-size;
+        background: rgba(44, 156, 0, 0.9);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: $transition;
+        opacity: 0;
+        transform: translateY(-10px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        z-index: 3;
+
+        .v-icon {
+            color: #ffffff;
+            font-size: 1.2rem;
+            transition: transform 0.2s ease;
+        }
+    }
+
+    .delete-btn {
+        position: absolute;
+        top: 15px;
+        right: 54px;
+        width: $edit-btn-size;
+        height: $edit-btn-size;
+        background: rgba(255, 255, 255, 0.9);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: $transition;
+        opacity: 0;
+        transform: translateY(-10px);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+        z-index: 3;
+
+        .v-icon {
+            color: #2c3e50;
+            font-size: 1.2rem;
+            transition: transform 0.2s ease;
+        }
+
+        &:hover {
+            background: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            
+            .v-icon {
+                transform: scale(1.1);
+            }
+        }
+    }
+
     // Contenido
     .card-content {
         padding: 20px;
@@ -218,6 +287,8 @@ $hover-animation-speed: 1.5s;
             line-height: 1.6;
             padding: 15px 0;
             position: relative;
+            max-height: 200px;
+            overflow-y: auto;
 
             &::before {
                 content: "“";
@@ -328,6 +399,19 @@ $hover-animation-speed: 1.5s;
 .floating-add-btn {
     position: fixed !important;
     bottom: 40px;
+    right: 25px;
+    z-index: 100;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+
+    &:hover {
+        transform: scale(1.1);
+    }
+}
+
+.floating-reported-btn {
+    position: fixed !important;
+    bottom: 100px;
     right: 25px;
     z-index: 100;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;

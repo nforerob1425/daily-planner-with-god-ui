@@ -1,24 +1,46 @@
 <template>
   <v-dialog :value="value" fullscreen persistent>
     <v-card class="dialog-card">
-      
-      <v-btn 
-        icon="mdi-plus"
-        fab
-        dark
-        color="primary"
-        class="floating-add-btn"
-        @click="openCreateDialog"
-      />
+      <v-tooltip text="Tooltip" location="left">
+        <template v-slot:activator="{ props }">
+          <v-btn 
+            v-bind="props"
+            icon="mdi-plus"
+            fab
+            dark
+            color="primary"
+            class="floating-add-btn"
+            @click="openCreateDialog"
+          />
+        </template>
+        <span>Registra lo que Dios te dice hoy</span>
+      </v-tooltip>
+
       
       <card-dialog
-      :show="showCreateDialog"
-      :colors="colors"
-      :initial-data="selectedCard"
-      :mode="editMode ? 'edit' : 'create'"
-      @close="closeCreateDialog"
-      @save="handleCardSave"
+        :show="showCreateDialog"
+        :colors="colors"
+        :initial-data="selectedCard"
+        :mode="editMode ? 'edit' : 'create'"
+        @close="closeCreateDialog"
+        @save="handleCardSave"
       />
+
+      <v-tooltip text="Tooltip" location="left"  v-if="this.user.hasLead && this.hasItemsReported">
+        <template v-slot:activator="{ props }">
+          <v-btn 
+            v-bind="props"
+            v-if="this.user.hasLead"
+            icon="mdi-clipboard-text"
+            fab
+            dark
+            color="green"
+            class="floating-reported-btn"
+            @click="reportPlanner"
+          />
+        </template>
+        <span>Reporta tu R07 a tu lider</span>
+      </v-tooltip>
 
       <v-btn 
         icon="mdi-close" 
@@ -84,9 +106,22 @@
                 </div>
 
                 <div class="card-header">
-                  <div class="edit-btn" @click.stop="openEditDialog(item)">
+                  <div v-if="!item.reported" class="edit-btn" @click.stop="openEditDialog(item)">
                     <v-icon>mdi-pencil</v-icon>
                   </div>
+
+                  <div v-if="!item.reported" class="delete-btn" @click="deleteCard(item)">
+                    <v-icon>mdi-delete</v-icon>
+                  </div>
+
+                  <v-tooltip text="Tooltip" location="top"  v-if="item.reported && !shouldShowUserLabel(item)">
+                    <template v-slot:activator="{ props }">
+                      <div class="report-ok-btn">
+                        <v-icon v-bind="props">mdi-bookmark-check</v-icon>
+                      </div>
+                    </template>
+                    <span>Ya esta reportada a tu lider</span>
+                  </v-tooltip>
 
                   <div class="date-badge">
                     <span 
@@ -115,7 +150,7 @@
                   <v-btn 
                       icon="mdi-star"
                       variant="text"
-                      
+                      v-if="!shouldShowUserLabel(item)"
                       class="favorite-icon"
                       :color="item.favorite ? 'yellow' : 'grey'"
                       @click="setFavorite(item.id); item.favorite = !item.favorite"
@@ -187,7 +222,8 @@ export default {
     processedReportedItems: Array,
     currentUserFullName: String,
     colors: Array,
-    selectedAgendaId: String
+    selectedAgendaId: String,
+    hasItemsReported: Boolean
   },
   data() {
     return {
@@ -279,6 +315,18 @@ export default {
       this.showCreateDialog = true;
     },
 
+    async deleteCard(card){
+      try {
+        await api.delete(`/api/Cards/${card.id}`);
+        this.$emit('card-deleted', card);
+      } catch (error) {
+        console.error('Error delete card:', error);
+        if (error.response.status === 401) {
+          this.logout();
+        }
+       } 
+    },
+
     handleCardSave(cardData) {
       if (this.editMode) {
         this.handleCardUpdate(cardData);
@@ -289,6 +337,38 @@ export default {
 
     openCreateDialog() {
       this.showCreateDialog = true;
+    },
+
+    async reportPlanner(){
+      this.notify({
+          title: 'Reportando',
+          text: 'Estamos reportando tu R07 a tu lider',
+          type: 'info',
+          duration: 2000
+        });
+
+        try {
+          await api.patch(`/api/Planner?userId=${this.user.id}`);
+          this.$emit('planner-reported');
+        } catch (error) {
+          if (error.response?.status === 401) {
+            this.logout();
+          } else {
+            this.notify({
+              title: 'Error',
+              text: error.response?.data?.Message || 'Error al guardar',
+              type: 'error',
+              duration: 5000
+            });
+          }
+        } finally {
+            this.notify({
+            title: 'Reportado',
+            text: 'R07 reportado',
+            type: 'success',
+            duration: 2000
+          });
+        }
     },
     
     closeCreateDialog() {
