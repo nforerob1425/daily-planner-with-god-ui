@@ -271,35 +271,63 @@
   
                 <!-- Sección de Peticiones -->
                 <section v-if="this.showPetitions" class="mb-8">
-                <h2 class="text-h4 mb-4 primary--text slide-in-left-delay">📋 Peticiones Activas</h2>
-                <v-fade-transition>
-                    <v-card elevation="1" class="pa-4 rounded-lg mock-section hover-3d">
-                    <div class="text-center mt-4 text-body-1">
-                        <v-icon color="primary">mdi-information-outline</v-icon>
-                        <span class="ml-2">Próximamente podrás ver todas tus peticiones activas aquí</span>
-                        <div class="text-caption mb-2">Actualmente en desarrollo 🚀</div>
-                    </div>
-                    <v-row>
-                        <v-col cols="12" md="6" v-for="n in 2" :key="n">
-                        <v-card elevation="3" class="pa-4 rounded-lg mock-card">
-                            <div class="d-flex align-center mb-2">
-                            <v-skeleton-loader type="avatar" class="mr-3"></v-skeleton-loader>
-                            <v-skeleton-loader type="heading" width="60%"></v-skeleton-loader>
-                            </div>
-                            <v-skeleton-loader type="paragraph"></v-skeleton-loader>
-                            <v-row class="mt-2" dense>
-                            <v-col cols="6">
-                                <v-skeleton-loader type="text" width="80%"></v-skeleton-loader>
-                            </v-col>
-                            <v-col cols="6">
-                                <v-skeleton-loader type="text" width="60%"></v-skeleton-loader>
-                            </v-col>
-                            </v-row>
-                        </v-card>
-                        </v-col>
-                    </v-row>
+                  <h2 class="text-h4 mb-4 primary--text slide-in-left-delay">📋 Peticiones Reportadas</h2>
+                  <v-slide-y-transition group>
+                    <v-card
+                      v-for="petition in petitionsReported"
+                      :key="petition.id"
+                      class="mb-4 pt-3 petition-card floating-card mx-auto"
+                      :class="{
+                        'active-card': petition.isPraying,
+                        'inactive-card': !petition.isPraying
+                      }"
+                      elevation="6"
+                    >
+                      <v-card-item>
+                        <template v-slot:prepend>
+                          <v-avatar :color="getPetitionColor(petition)" size="56">
+                            <v-icon size="x-large" :icon="getPetitionIcon(petition)" color="white"></v-icon>
+                          </v-avatar>
+                        </template>
+
+                        <v-card-title class="text-h6 font-weight-bold">
+                          Oró por {{ petition.prayFor }}
+                        </v-card-title>
+
+                        <v-tooltip text="Tooltip" location="top">
+                          <template v-slot:activator="{ props }">
+                            <v-btn
+                              v-bind="props"
+                              icon
+                              @click="togglePraying(petition)"
+                              class="floating pray-btn"
+                              :color="petition.isPraying ? 'teal-darken-2' : 'grey'"
+                              size="x-large"
+                            >
+                              <v-icon>{{ petition.isPraying ? 'mdi-hand-heart' : 'mdi-hand' }}</v-icon>
+                            </v-btn>
+                          </template>
+                          <span v-if="petition.isPraying">Dejar de orar</span>
+                          <span v-else>Empieza a orar</span>
+                      </v-tooltip>
+                      </v-card-item>
+
+                      <v-card-text class="text-body-1 content-text">
+                        {{ petition.content }}
+                        <div class="mt-4 d-flex align-center">
+                          <span class="text-caption cyan--text date-text">
+                            {{ petition.originalUser }} -
+                            {{ formattedDate(petition.createdDate) }}
+                          </span>
+                        </div>
+                      </v-card-text>
                     </v-card>
-                </v-fade-transition>
+                  </v-slide-y-transition>
+
+                  <div v-if="petitionsReported.length === 0" class="text-center mt-4 text-body-1">
+                    <v-icon color="primary">mdi-information-outline</v-icon>
+                    <span class="ml-2">No tienes peticiones activas en este momento</span>
+                  </div>
                 </section>
               </v-card-text>
             </v-card>
@@ -380,7 +408,13 @@
           return 'Las contraseñas deben coincidir y tener al menos 6 caracteres'
         }
         return ''
-      }
+      },
+      petitionsReported() {
+        return this.user?.petitionsReported || [];
+      },
+      petitionTypes() {
+        return this.user?.petitionTypes || [];
+      },
     },
     methods: {
       ...mapActions(['logout']),
@@ -414,6 +448,37 @@
         this.showPasswordDialog = false
         this.newPassword = ''
         this.confirmPassword = ''
+      },
+      getPetitionColor(petition) {
+        const type = this.petitionTypes.find(t => t.id === petition.petitionTypeId);
+        return type?.color || '#2196F3';
+      },
+      
+      getPetitionIcon(petition) {
+        const type = this.petitionTypes.find(t => t.id === petition.petitionTypeId);
+        return type?.icon || 'mdi-help-circle';
+      },
+
+      formattedDate(date) {
+        return new Date(date).toLocaleDateString('es-ES', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+      },
+
+      async togglePraying(petition) {
+        try {
+          await this.$store.dispatch('togglePraying', petition);
+        } catch (error) {
+          this.notify({
+            title: 'Error',
+            text: 'No se pudo actualizar el estado',
+            type: 'error'
+          });
+        }
       }
     }
   };
@@ -614,5 +679,67 @@
 
 .password-dialog .v-input__slot:hover {
   transform: translateY(-2px);
+}
+
+.petition-card {
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  &.active-card {
+    border-left: 4px solid #1DE9B6;
+    background: #1de9b628;
+  }
+  
+  &.inactive-card {
+    border-left: 4px solid #9E9E9E;
+    background: rgba(158, 158, 158, 0.05);
+  }
+}
+
+.floating-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 12px 24px rgba(30, 144, 255, 0.15);
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(30, 144, 255, 0.2) !important;
+  }
+}
+
+.hover-3d {
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  
+  &:hover {
+    transform: perspective(6000px) rotateX(2deg) rotateY(2deg);
+  }
+}
+
+.floating-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 12px 24px rgba(30, 144, 255, 0.15);
+  
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 20px 40px rgba(30, 144, 255, 0.2) !important;
+  }
+}
+
+.date-text {
+  position: absolute;
+  right: 25px;
+}
+
+.hover-3d {
+  transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  
+  &:hover {
+    transform: perspective(6000px) rotateX(2deg) rotateY(2deg);
+  }
+}
+
+.pray-btn {
+  position: absolute;
+    right: 12px;
+    top: 15px;
 }
   </style>

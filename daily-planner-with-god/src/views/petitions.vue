@@ -343,8 +343,8 @@ export default {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   
   &.active-card {
-    border-left: 4px solid #4CAF50;
-    background: rgba(76, 175, 80, 0.05);
+    border-left: 4px solid #1DE9B6;
+    background: #1de9b628;
   }
   
   &.inactive-card {

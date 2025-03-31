@@ -37,7 +37,15 @@ export default createStore({
       state.user.configurationName = config.configurationName
       state.user.showFavorites = config.showFavorites
       state.user.showPetitions = config.showPetitions
-    }
+    },
+    UPDATE_PETITION(state, updatedPetition) {
+      if (state.user?.petitionsReported) {
+        const index = state.user.petitionsReported.findIndex(p => p.id === updatedPetition.id);
+        if (index !== -1) {
+          state.user.petitionsReported.splice(index, 1, updatedPetition);
+        }
+      }
+    },
   },
   actions: {
     async updateUserConfiguration({ commit }, { newConfig, payload }) {
@@ -98,7 +106,24 @@ export default createStore({
       if (typeof document !== 'undefined') {
         document.cookie = 'Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
       }
+    },
+
+    async togglePraying({ commit }, petition) {
+      try {
+        const newState = !petition.isPraying;
+        const response = await api.patch(`/api/petitions?petitionId=${petition.id}`);
+        
+        // Actualizar en el store
+        const updatedPetition = { ...petition, isPraying: newState };
+        commit('UPDATE_PETITION', updatedPetition);
+        
+        return response.data;
+      } catch (error) {
+        console.error('Error actualizando estado:', error);
+        throw error;
+      }
     }
+
   },
   getters: {
     datos: (state) => state.datos,
