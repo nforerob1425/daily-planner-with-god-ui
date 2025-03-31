@@ -184,7 +184,7 @@ export default {
       try {
         const response = await api.get(`/api/Cards?userId=${this.user.id}`);
         this.items = response.data?.data || [];
-        this.items.sort((a, b) => new Date(a.createDate) - new Date(b.createDate));
+        this.items.sort((a, b) => new Date(a.created) - new Date(b.created));
       } catch (error) {
         console.error('Error fetching items:', error);
         if (error.response.status === 401) {
@@ -219,7 +219,7 @@ export default {
     },
     handleNewCard(newCard) {
       this.items.unshift(newCard);
-      this.items.sort((a, b) => new Date(a.createDate) - new Date(b.createDate));
+      this.items.sort((a, b) => new Date(a.created) - new Date(b.created));
       this.filteredItems = this.groupedCardsByAgenda[this.selectedAgendaId] || [];
     },
     handleCardUpdate(updatedCard) {

@@ -196,7 +196,6 @@
                   v-model="localCard.title"
                   label="Título"
                   outlined
-                  clearable
                   class="mb-4"
                   :rules="[v => !!v || 'El título es requerido']"
                 ></v-text-field>
@@ -205,7 +204,6 @@
                   v-model="localCard.content"
                   label="Contenido principal"
                   outlined
-                  clearable
                   rows="4"
                   auto-grow
                   class="mb-4"
@@ -216,7 +214,6 @@
                   v-model="localCard.versicle"
                   label="Versículo relacionado"
                   outlined
-                  clearable
                   class="mb-6"
                 ></v-text-field>
   
