@@ -1,6 +1,6 @@
 <template>
     <v-dialog v-model="showDialog" max-width="1000" persistent>
-      <v-card class="dialog-card">
+      <v-card class="dialog-card" elevation="5">
 
         <v-btn 
         icon="mdi-close" 
@@ -16,7 +16,7 @@
           <!-- Paso 1 - Selección de colores -->
           <template #[`item.1`]>
             <v-form v-model="valid" @submit.prevent>
-              <v-card :title="title" flat class="pa-4 scroll-container">
+              <v-card :title="title" flat class="pa-4 scroll-container" elevation="5">
                 <div class="color-grid">
                   
                     <!-- Primary Background -->
@@ -118,7 +118,7 @@
                       v-model="localCard.primaryColorDate"
                       :items="filterColors('Title Date Background')"
                       item-value="colorId"
-                      label="Fondo secundario"
+                      label="Fondo fecha"
                       outlined
                       clearable
                       class="combobox-field"
@@ -147,7 +147,7 @@
                   <div class="color-picker-container">
                     <v-autocomplete
                       v-model="localCard.letterDateColor"
-                      :items="filterColors('Primary Letter')"
+                      :items="filterColors('Title Date')"
                       item-value="colorId"
                       label="Fecha"
                       outlined
@@ -181,7 +181,7 @@
           <!-- Paso 2 - Contenido -->
           <template #[`item.2`]>
             <v-form v-model="valid" @submit.prevent>
-              <v-card title="Contenido" flat class="pa-4 scroll-container">
+              <v-card elevation="5" title="Contenido" flat class="pa-4 scroll-container">
                 <v-btn
                   color="secondary"
                   @click="step = 1"
@@ -363,7 +363,7 @@
         var data = {
             ...this.localCard,
             primaryColorDateId: this.getColorId(this.localCard.primaryColorDate, 'Title Date Background'),
-            letterDateColorId: this.getColorId(this.localCard.letterDateColor, 'Primary Letter'),
+            letterDateColorId: this.getColorId(this.localCard.letterDateColor, 'Title Date'),
             primaryColorId: this.getColorId(this.localCard.primaryColor, 'Primary Background'),
             letterColorId: this.getColorId(this.localCard.letterColor, 'Primary Letter'),
             titleColorId: this.getColorId(this.localCard.titleColor, 'Title'),
