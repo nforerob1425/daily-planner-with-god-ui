@@ -414,7 +414,8 @@ export default {
       return this.profileDetails?.showFavorites || false;
     },
     favoriteCards() {
-      return this.profileDetails?.favoriteCards || [];
+      const orderCards = this.profileDetails?.favoriteCards;
+      return orderCards.sort((a, b) => new Date(a.created) - new Date(b.created)) || [];
     },
     showPetitions() {
       return this.profileDetails?.showPetitions || false;
