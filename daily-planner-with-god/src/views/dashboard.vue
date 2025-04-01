@@ -1,22 +1,29 @@
 <template>
   <v-container fluid class="dashboard-container fill-height config-view">
-    <v-row v-if="dataLoaded" class="animate__animated animate__fadeIn ma-10">
+    <v-row v-if="dataLoaded" class="animate__animated animate__fadeIn ma-4">
       <!-- Sección Usuarios -->
       <v-col cols="12">
-        <v-card class="mb-4 elevation-3" hover>
-          <v-card-title class="primary">
+        <v-card class="mb-4 elevation-4 glass-card" rounded="xl">
+          <v-card-title class="card-header-primary">
             <v-icon large left>mdi-account-group</v-icon>
-            Usuarios
+            <span class="header-title">Usuarios</span>
+            <v-spacer></v-spacer>
+            <v-chip variant="outlined" color="white" class="total-chip pulse">
+              Total: {{ users.totalUsers }}
+            </v-chip>
           </v-card-title>
           <v-card-text>
             <div class="stats-grid pa-5">
-              <stat-card icon="mdi-account" title="Total" :value="users.totalUsers" color="blue"/>
-              <stat-card icon="mdi-sheep" title="Ovejas" :value="users.sheeps" color="orange"/>
-              <stat-card icon="mdi-account-cowboy-hat" title="Líderes" :value="users.leaders" color="green"/>
-              <stat-card icon="mdi-account-network" title="Coordinadores" :value="users.networkCoordinators" color="purple"/>
-              <stat-card icon="mdi-account-star" title="Líderes Red" :value="users.networkLeaders" color="teal"/>
-              <stat-card icon="mdi-account-tie" title="Cabezas Red" :value="users.networkHeaders" color="pink"/>
-              <stat-card icon="mdi-account-hard-hat" title="Pastores" :value="users.pastors" color="deep-orange"/>
+              <stat-card 
+                v-for="(stat, index) in userStats" 
+                :key="index"
+                class="animate__animated animate__fadeInUp"
+                :style="{ 'animation-delay': `${index * 0.1}s` }"
+                :icon="stat.icon"
+                :title="stat.title"
+                :value="stat.value"
+                :color="stat.color"
+              />
             </div>
           </v-card-text>
         </v-card>
@@ -24,23 +31,40 @@
 
       <!-- Sección Tarjetas -->
       <v-col cols="12" md="6">
-        <v-card class="mb-4 elevation-3" hover>
-          <v-card-title class="secondary">
+        <v-card class="mb-4 elevation-4 glass-card animate__animated animate__fadeInLeft" rounded="xl">
+          <v-card-title class="card-header-secondary">
             <v-icon large left>mdi-cards</v-icon>
-            Tarjetas
+            <span class="header-title">Tarjetas</span>
+            <v-spacer></v-spacer>
+            <v-icon color="white">mdi-palette-swatch</v-icon>
           </v-card-title>
           <v-card-text>
             <div class="color-palette pa-5">
-              <color-box v-for="(color, index) in topColors" 
-                        :key="index" 
-                        :color="color.value" 
-                        :rank="index + 1"/>
+              <color-box 
+                v-for="(color, index) in topColors" 
+                :key="index" 
+                :color="color.value" 
+                :rank="index + 1"
+                class="animate__zoomIn ma-5"
+                :style="{ 'animation-delay': `${index * 0.2}s` }"
+              />
             </div>
-            <v-list density="compact">
-              <v-list-item v-for="(value, key) in cards" :key="key">
-                <template v-if="!key.includes('Color') && key !== 'topOneColorSelected' && key !== 'topTwoColorSelected' && key !== 'topThreeColorSelected'">
-                  <v-list-item-title>{{ formatKey(key) }}</v-list-item-title>
-                  <v-list-item-subtitle class="text-right">{{ value }}</v-list-item-subtitle>
+            <v-list density="compact" class="metric-list">
+              <v-list-item 
+                v-for="([key, value]) in filteredCards" 
+                :key="key"
+                class="list-item-hover ml-5 mr-5"
+              >
+                <template v-slot:prepend>
+                  <v-icon color="primary">mdi-circle-medium</v-icon>
+                </template>
+                <v-list-item-title class="metric-title">
+                  {{ formatKey(key) }}
+                </v-list-item-title>
+                <template v-slot:append>
+                  <v-chip variant="outlined" color="primary" class="metric-value">
+                    {{ value }}
+                  </v-chip>
                 </template>
               </v-list-item>
             </v-list>
@@ -50,40 +74,52 @@
 
       <!-- Sección Roles -->
       <v-col cols="12" md="6">
-        <v-card class="elevation-3" hover>
-          <v-card-title class="teal">
+        <v-card class="elevation-4 glass-card animate__animated animate__fadeInRight" rounded="xl">
+          <v-card-title class="card-header-accent mb-5">
             <v-icon large left>mdi-account-tie</v-icon>
-            Distribución de Roles
+            <span class="header-title">Distribución de Roles</span>
+            <v-spacer></v-spacer>
+            <v-icon color="white">mdi-chart-pie</v-icon>
           </v-card-title>
           <v-card-text>
-            <!-- Tarjetas de métricas principales -->
             <v-row class="mb-4">
-              <v-col cols="6" sm="4" v-for="(metric, index) in roleMetrics" :key="index">
+              <v-col 
+                cols="6" 
+                sm="4" 
+                v-for="(metric, index) in roleMetrics" 
+                :key="index"
+                class="animate__animated animate__fadeInUp"
+                :style="{ 'animation-delay': `${index * 0.15}s` }"
+              >
                 <div class="role-metric text-center pa-3">
-                  <div class="text-h5 font-weight-bold" :style="{ color: chartColors[index] }">
+                  <div class="text-h5 font-weight-bold metric-value" :style="{ color: chartColors[index] }">
                     {{ metric.value }}
                   </div>
-                  <div class="text-caption text-grey-darken-1">
+                  <div class="text-caption metric-label">
                     {{ metric.title }}
                   </div>
                 </div>
               </v-col>
             </v-row>
 
-            <!-- Listado visual de roles con progreso -->
             <v-list density="compact" class="role-list">
               <v-list-item
                 v-for="(role, index) in roles.rolesNames"
                 :key="index"
-                class="px-0"
+                class="list-item-hover px-0 ml-5 mr-5"
               >
                 <template v-slot:prepend>
-                  <v-avatar :color="chartColors[index % 3]" size="32" class="mr-3">
+                  <v-avatar 
+                    :color="chartColors[index % 3]" 
+                    size="32" 
+                    class="mr-3 animate__animated animate__bounceIn"
+                    :style="{ 'animation-delay': `${index * 0.1}s` }"
+                  >
                     <v-icon color="white">{{ roleIcons[index] || 'mdi-account' }}</v-icon>
                   </v-avatar>
                 </template>
 
-                <v-list-item-title class="font-weight-medium">
+                <v-list-item-title class="font-weight-medium role-title">
                   {{ role }}
                 </v-list-item-title>
 
@@ -93,8 +129,9 @@
                     :size="48"
                     :width="4"
                     :color="chartColors[index % 3]"
+                    class="progress-ring"
                   >
-                    <span class="text-caption">{{ roleDistribution[index] }}%</span>
+                    <span class="text-caption progress-value">{{ roleDistribution[index] }}%</span>
                   </v-progress-circular>
                 </template>
               </v-list-item>
@@ -105,40 +142,41 @@
 
       <!-- Sección Peticiones -->
       <v-col cols="12" md="4">
-        <v-card class="elevation-3" hover>
-          <v-card-title class="accent">
+        <v-card class="elevation-4 glass-card animate__animated animate__fadeInUp" rounded="xl">
+          <v-card-title class="card-header-indigo">
             <v-icon large left>mdi-hand-heart</v-icon>
-            Peticiones
+            <span class="header-title">Peticiones</span>
+            <v-spacer></v-spacer>
+            <v-icon color="white">mdi-chat-processing</v-icon>
           </v-card-title>
           <v-card-text>
-            <!-- Gráfico circular simplificado -->
             <div class="d-flex justify-center align-center pa-5">
               <div class="text-center">
-                <div class="text-h3 primary--text">{{ petitions.totalPetitions }}</div>
-                <div class="text-caption">Total de peticiones</div>
+                <div class="text-h3 primary--text animate__pulse">{{ petitions.totalPetitions }}</div>
+                <div class="text-caption metric-label">Total de peticiones</div>
                 <v-divider class="my-3"></v-divider>
                 <div class="text-h5 pink--text">{{ petitions.petitionsInPray }}</div>
-                <div class="text-caption">En oración</div>
+                <div class="text-caption metric-label">En oración</div>
               </div>
             </div>
 
-            <!-- Listado de tipos de peticiones -->
-            <v-list density="compact" class="mt-2">
+            <v-list density="compact" class="mt-2 metric-list">
               <v-list-item
                 v-for="(type, index) in filteredPetitionTypes"
                 :key="index"
                 :class="index < 3 ? 'font-weight-bold' : ''"
+                class="list-item-hover"
               >
                 <template v-slot:prepend>
                   <v-icon :color="chartColors[index]">mdi-circle-small</v-icon>
                 </template>
                 
-                <v-list-item-title>
+                <v-list-item-title class="metric-title">
                   {{ type || 'Sin clasificar' }}
                 </v-list-item-title>
 
                 <template v-slot:append>
-                  <v-chip variant="text" :color="chartColors[index]">
+                  <v-chip variant="text" :color="chartColors[index]" class="metric-value">
                     #{{ index + 1 }}
                   </v-chip>
                 </template>
@@ -148,12 +186,14 @@
         </v-card>
       </v-col>
 
-      <!-- Nueva Sección Colores -->
+      <!-- Sección Colores -->
       <v-col cols="12" md="4">
-        <v-card class="elevation-3" hover>
-          <v-card-title class="indigo">
+        <v-card class="elevation-4 glass-card animate__animated animate__fadeInUp" rounded="xl">
+          <v-card-title class="card-header-purple">
             <v-icon large left>mdi-palette</v-icon>
-            Colores
+            <span class="header-title">Colores</span>
+            <v-spacer></v-spacer>
+            <v-icon color="white">mdi-brush</v-icon>
           </v-card-title>
           <v-card-text>
             <v-row class="pa-5">
@@ -162,8 +202,9 @@
                   :icon="colorIcons[key]" 
                   :title="formatKey(key)" 
                   :value="value"
-                  color="indigo"
+                  color="purple"
                   small
+                  class="animate__zoomIn"
                 />
               </v-col>
             </v-row>
@@ -173,10 +214,12 @@
 
       <!-- Sección Estadísticas Generales -->
       <v-col cols="12" md="4">
-        <v-card class="elevation-3" hover>
-          <v-card-title class="orange">
+        <v-card class="elevation-4 glass-card animate__animated animate__fadeInUp" rounded="xl">
+          <v-card-title class="card-header-orange">
             <v-icon large left>mdi-chart-box</v-icon>
-            Estadísticas Generales
+            <span class="header-title">Estadísticas</span>
+            <v-spacer></v-spacer>
+            <v-icon color="white">mdi-poll</v-icon>
           </v-card-title>
           <v-card-text>
             <v-row class="pa-5">
@@ -186,6 +229,7 @@
                   title="Agendas" 
                   :value="totalAgendas"
                   color="orange"
+                  class="animate__zoomIn"
                 />
               </v-col>
               <v-col cols="6">
@@ -194,18 +238,17 @@
                   title="Anuncios" 
                   :value="totalAds"
                   color="cyan"
+                  class="animate__zoomIn"
                 />
               </v-col>
             </v-row>
           </v-card-text>
         </v-card>
       </v-col>
-      
     </v-row>
 
     <v-progress-circular
       v-else
-      
       indeterminate
       color="primary"
       size="64"
@@ -214,28 +257,43 @@
   </v-container>
 </template>
 
+
 <script>
 import api from '@/plugins/axios';
+import { mapActions } from 'vuex';
 import StatCard from '@/components/StatCard.vue';
 import ColorBox from '@/components/ColorBox.vue';
 
 export default {
   name: 'dashboard-view',
-  components: { StatCard, ColorBox },
-  data: () => ({
-    dataLoaded: false,
-    chartColors: ['#114D7A', '#5C164E', '#FFD166'],
-    colorIcons: {
-      totalColors: 'mdi-invert-colors',
-      totalPrimaryBackground: 'mdi-format-color-fill',
-      totalPrimaryLetter: 'mdi-format-letter-case',
-      totalTitle: 'mdi-format-title',
-      totalTitleDate: 'mdi-calendar-text',
-      totalTitleDateBackground: 'mdi-calendar-clock'
-    },
-    dashboardData: null
-  }),
+  components: {
+    StatCard,
+    ColorBox
+  },
+  data() {
+    return {
+      dataLoaded: false,
+      dashboardData: null,
+      chartColors: ['#114D7A', '#5C164E', '#FFD166'],
+      colorIcons: {
+        totalColors: 'mdi-invert-colors',
+        totalPrimaryBackground: 'mdi-format-color-fill',
+        totalPrimaryLetter: 'mdi-format-letter-case',
+        totalTitle: 'mdi-format-title',
+        totalTitleDate: 'mdi-calendar-text',
+        totalTitleDateBackground: 'mdi-calendar-clock'
+      }
+    }
+  },
   computed: {
+    filteredCards() {
+      return Object.entries(this.cards || {}).filter(([key]) => 
+        !key.includes('Color') && 
+        key !== 'topOneColorSelected' && 
+        key !== 'topTwoColorSelected' && 
+        key !== 'topThreeColorSelected'
+      )
+    },
     users() { return this.dashboardData?.users || {} },
     cards() { return this.dashboardData?.cards || {} },
     petitions() { return this.dashboardData?.petitions || {} },
@@ -243,55 +301,16 @@ export default {
     roles() { return this.dashboardData?.roles || {} },
     totalAgendas() { return this.dashboardData?.totalAgendas || 0 },
     totalAds() { return this.dashboardData?.totalAds || 0 },
-    
-    filteredPetitionTypes() {
+    userStats() {
       return [
-        this.petitions.topOnePetitionType,
-        this.petitions.topTwoPetitionType,
-        this.petitions.topThreePetitionType
-      ].filter(t => t && t.trim() !== '')
+        { icon: 'mdi-sheep', title: 'Ovejas', value: this.users.sheeps, color: 'orange' },
+        { icon: 'mdi-account-cowboy-hat', title: 'Líderes', value: this.users.leaders, color: 'green' },
+        { icon: 'mdi-account-network', title: 'Coordinadores', value: this.users.networkCoordinators, color: 'purple' },
+        { icon: 'mdi-account-star', title: 'Líderes Red', value: this.users.networkLeaders, color: 'teal' },
+        { icon: 'mdi-account-tie', title: 'Cabezas Red', value: this.users.networkHeaders, color: 'pink' },
+        { icon: 'mdi-account-hard-hat', title: 'Pastores', value: this.users.pastors, color: 'deep-orange' }
+      ]
     },
-    
-    petitionCounts() {
-      const total = this.petitions.totalPetitions
-      return this.filteredPetitionTypes.map((_, i) => 
-        Math.round(total * (1 - i * 0.3)) // Ejemplo de distribución
-      )
-    },
-
-    petitionsData() {
-      return {
-        labels: this.filteredPetitionTypes,
-        values: this.petitionCounts,
-        colors: this.chartColors
-      }
-    },
-
-    topColors() {
-      return [
-        { name: 'Primario', value: this.cards.topOneColorSelected },
-        { name: 'Secundario', value: this.cards.topTwoColorSelected },
-        { name: 'Terciario', value: this.cards.topThreeColorSelected }
-      ].filter(c => c.value)
-    },
-
-    rolesData() {
-      return {
-        labels: this.roles.rolesNames,
-        values: [
-          this.users.sheeps,
-          this.users.leaders,
-          this.users.networkCoordinators,
-          this.users.networkLeaders,
-          this.users.networkHeaders,
-          this.users.pastors,
-          this.roles.totalModeratorUsers,
-          this.roles.totalAdminUsers,
-        ],
-        colors: this.chartColors
-      }
-    },
-
     roleMetrics() {
       return [
         { title: 'Total Roles', value: this.roles.totalRolesExist },
@@ -299,7 +318,6 @@ export default {
         { title: 'Moderadores', value: this.roles.totalModeratorUsers }
       ]
     },
-    
     roleDistribution() {
       const totalUsers = this.users.totalUsers || 1
       return [
@@ -313,7 +331,20 @@ export default {
         (this.roles.totalAdminUsers / totalUsers * 100).toFixed(1),
       ]
     },
-
+    filteredPetitionTypes() {
+      return [
+        this.petitions.topOnePetitionType,
+        this.petitions.topTwoPetitionType,
+        this.petitions.topThreePetitionType
+      ].filter(t => t && t.trim() !== '')
+    },
+    topColors() {
+      return [
+        { name: 'Primario', value: this.cards.topOneColorSelected },
+        { name: 'Secundario', value: this.cards.topTwoColorSelected },
+        { name: 'Terciario', value: this.cards.topThreeColorSelected }
+      ].filter(c => c.value)
+    },
     roleIcons() {
       return [
         'mdi-sheep',
@@ -328,6 +359,10 @@ export default {
     }
   },
   methods: {
+    ...mapActions(['logout']),
+    formatKey(key) {
+      return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())
+    },
     async fetchItems() {
       try {
         const response = await api.get('/api/Dashboard');
@@ -337,9 +372,6 @@ export default {
         console.error('Error fetching items:', error);
         if (error.response?.status === 401) this.logout();
       }
-    },
-    formatKey(key) {
-      return key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())
     }
   },
   mounted() {
@@ -350,62 +382,183 @@ export default {
 
 <style scoped>
 .dashboard-container {
-  position: relative;
-  min-height: 300px;
+  background: linear-gradient(45deg, #f5f7fa, #e6e9ef);
+  min-height: 100vh;
+  padding: 2rem;
 }
 
-.loading-spinner {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
+.card-header-primary {
+  background: linear-gradient(45deg, #2196F3, #1976D2) !important;
+  color: white !important;
+  padding: 1.5rem !important;
+  border-radius: 16px 16px 0 0;
+}
+
+.card-header-secondary {
+  background: linear-gradient(45deg, #3F51B5, #303F9F) !important;
+  color: white !important;
+}
+
+.card-header-accent {
+  background: linear-gradient(45deg, #FF4081, #F50057) !important;
+  color: white !important;
+}
+
+.card-header-indigo {
+  background: linear-gradient(45deg, #536DFE, #304FFE) !important;
+  color: white !important;
+}
+
+.card-header-purple {
+  background: linear-gradient(45deg, #9C27B0, #7B1FA2) !important;
+  color: white !important;
+}
+
+.card-header-orange {
+  background: linear-gradient(45deg, #FF9800, #F57C00) !important;
+  color: white !important;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 16px 32px rgba(0,0,0,0.12) !important;
+}
+
+.header-title {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.total-chip {
+  border-width: 2px;
+  font-weight: 500;
+  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.15) !important;
 }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem;
 }
 
-.color-palette {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-  justify-content: center;
+.list-item-hover {
+  transition: all 0.3s ease;
+  border-radius: 10px;
+  margin: 4px 0;
+  padding: 8px;
 }
 
-.v-card {
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+.list-item-hover:hover {
+  background: rgba(33, 150, 243, 0.05) !important;
+  transform: translateX(10px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-.v-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 16px rgba(0,0,0,0.15) !important;
+.metric-list {
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 14px;
+  backdrop-filter: blur(6px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
-.animate__animated {
-  --animate-duration: 0.6s;
+.metric-title {
+  font-weight: 500;
+  color: #2c3e50;
+  letter-spacing: 0.3px;
 }
 
-.v-card-title {
-  color: white !important;
-  padding: 16px !important;
-  border-radius: 8px 8px 0 0;
+.metric-value {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  background: rgba(255, 255, 255, 0.9) !important;
 }
 
-.v-card-title.primary { background: #2196F3; }
-.v-card-title.secondary { background: #3F51B5; }
-.v-card-title.accent { background: #FF4081; }
-.v-card-title.indigo { background: #536DFE; }
-.v-card-title.teal { background: #009688; }
-.v-card-title.orange { background: #FF9800; }
-
-.v-list-item__prepend {
-  align-self: center !important;
+.role-metric {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0,0,0,0.05);
 }
 
-.v-chip--rank {
-  min-width: 40px;
-  justify-content: center;
+.role-metric:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+}
+
+.progress-ring {
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.progress-ring:hover {
+  transform: rotate(360deg) scale(1.1);
+}
+
+.progress-value {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.role-title {
+  color: #34495e;
+  letter-spacing: 0.3px;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 1rem;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+  }
+  
+  .header-title {
+    font-size: 1.25rem;
+  }
+  
+  .v-card-title {
+    padding: 12px !important;
+  }
+  
+  .glass-card {
+    margin-bottom: 1.5rem;
+  }
+}
+
+@keyframes animate__zoomIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate__zoomIn {
+  animation: animate__zoomIn 0.6s ease;
 }
 </style>
