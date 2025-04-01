@@ -94,7 +94,7 @@
       </section>
 
       <!-- Botón flotante de creación -->
-      <v-tooltip text="Pidele ayuda a tu lider a orar" location="left" v-if="this.user.hasLead">
+      <v-tooltip text="Pidele ayuda a tu lider para orar" location="left" v-if="this.user.hasLead">
         <template v-slot:activator="{ props }">
           <v-btn 
             v-bind="props"
