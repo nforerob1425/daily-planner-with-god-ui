@@ -1,31 +1,36 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import MainLayout from '@/layouts/MainLayout.vue';
-import AuthLayout from '@/layouts/AuthLayout.vue';
-import account from '@/views/account.vue';
-import planner from '@/views/planner.vue';
-import configuration from '@/views/configuration.vue';
-import contact from '@/views/contact.vue';
-import login from '@/views/login.vue';
+import store from '@/store';
 
 const routes = [
   {
     path: '/',
-    component: MainLayout,
+    redirect: '/planner',
+  },
+  {
+    path: '/',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true }, // Protección de rutas
     children: [
-      { path: 'account', component: account },
-      { path: 'planner', component: planner },
-      { path: 'configuration', component: configuration },
-      { path: 'contact', component: contact },
+      { path: 'dashboard', component: () => import('@/views/dashboard.vue') },
+      { path: 'planner', component: () => import('@/views/planner.vue') },
+      { path: 'configuration', component: () => import('@/views/configuration.vue') },
+      { path: 'contact', component: () => import('@/views/contact.vue') },
+      { path: 'profile', component: () => import('@/views/profile.vue') },
+      { path: 'home', component: () => import('@/views/home.vue') },
+      { path: 'petitions', component: () => import('@/views/petitions.vue') },
+      { path: 'users', component: () => import('@/views/users.vue') },
+      { path: 'application', component: () => import('@/views/application.vue') },
     ],
   },
   {
     path: '/login',
-    component: AuthLayout,
+    component: () => import('@/layouts/AuthLayout.vue'),
+    meta: { guestOnly: true }, // Solo para no autenticados
     children: [
       {
-        path: 'login',
+        path: '',
         name: 'Login',
-        component: login,
+        component: () => import('@/views/login.vue'),
       },
     ],
   },
@@ -34,6 +39,19 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+});
+
+// Guard de navegación
+router.beforeEach((to, from, next) => {
+  const isAuthenticated = store.getters.isAuthenticated;
+
+  if (to.meta.requiresAuth && !isAuthenticated) {
+    next('/login');
+  } else if (to.meta.guestOnly && isAuthenticated) {
+    next('/');
+  } else {
+    next();
+  }
 });
 
 export default router;

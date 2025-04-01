@@ -1,7 +1,29 @@
-﻿################################################################################
-# Este archivo .gitignore ha sido creado automáticamente por Microsoft(R) Visual Studio.
-################################################################################
+﻿# Node modules
+/node_modules/
 
-/.vs/daily-planner-with-god-ui/FileContentIndex/da9325a6-3e54-4b4b-84fb-3f3091fb93a9.vsidx
-/.vs/daily-planner-with-god-ui/FileContentIndex
+# Log files
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build output
+/dist/
+/build/
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
 *.vs
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# MacOS
+*.swp
+
+# Miscellaneous
+*.log

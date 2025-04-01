@@ -1,88 +1,89 @@
 <template>
-    <v-app>
-         <!-- Barra superior -->
-        <v-app-bar color="primary" dark app>
-            <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
-            <v-toolbar-title>Mi Aplicación</v-toolbar-title>
-            <v-spacer></v-spacer>
+  <v-app>
+    <!-- Barra superior -->
+    <v-app-bar color="primary" app class="custom-app-bar">
+      <v-app-bar-title>Bienvenido {{ this.fullName }} </v-app-bar-title>
+    </v-app-bar>
 
-            <!-- Avatar y menú desplegable -->
-            <v-menu v-model:open="menuVisible" offset-y>
-                <template v-slot:activator="{ props }">
-                <v-btn icon v-bind="props">
-                    <v-avatar color="secondary" size="40">
-                    <v-icon dark>mdi-account</v-icon>
-                    </v-avatar>
-                </v-btn>
-                </template>
+    <!-- Panel desplegable -->
+    <v-navigation-drawer v-model="drawer" app expand-on-hover rail class="mr-2 pr-2">
+      <v-list>
+        <v-list-item v-for="(item, index) in menuItems" :key="index" :to="item.route"  active-class="active-item">
+          <template v-slot:prepend>
+            <v-icon>{{ item.icon }}</v-icon>
+          </template>
+          <v-list-item-title>{{ item.title }}</v-list-item-title>
+        </v-list-item>
+        <v-list-item @click="cerrarSesion()">
+          <template v-slot:prepend>
+            <v-icon>mdi-logout</v-icon>
+          </template>
+          <v-list-item-title>Cerrar sesion</v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-navigation-drawer>
+    <v-main>
+      <router-view></router-view>
+      <notifications position="top right" class="notification-card"/>
+    </v-main>
+  </v-app>
+</template>
 
-                <v-list>
-                <v-list-item @click="cambiarContraseña">
-                    <v-list-item-title>Cambiar contraseña</v-list-item-title>
-                </v-list-item>
-                <v-list-item @click="cerrarSesion">
-                    <v-list-item-title>Cerrar sesión</v-list-item-title>
-                </v-list-item>
-                </v-list>
-            </v-menu>
-        </v-app-bar>
+<script>
+import { mapActions, mapState } from 'vuex';
 
-        <!-- Panel desplegable -->
-        <v-navigation-drawer v-model="drawer" app temporary>
-            <v-list>
-            <v-list-item
-                v-for="(item, index) in menuItems"
-                :key="index"
-                :to="item.route"
-            >
-                <v-list-item-icon>
-                <v-icon>{{ item.icon }}</v-icon>
-                </v-list-item-icon>
-                <v-list-item-content>
-                <v-list-item-title>{{ item.title }}</v-list-item-title>
-                </v-list-item-content>
-            </v-list-item>
-            </v-list>
-        </v-navigation-drawer>
-    
-        <!-- Área de contenido dinámico -->
-        <v-main>
-            <router-view></router-view>
-        </v-main>
-    </v-app>
-  </template>
-  
-  <script>
-  export default {
-    name: 'MainLayout',
-    data() {
-      return {
-        menuVisible: false,
-        drawer: false, // Controla la visibilidad del drawer
-        menuItems: [
-          { title: 'Cuenta', icon: 'mdi-account', route: '/account' },
-          { title: 'R07', icon: 'mdi-file-document', route: '/planner' },
-          { title: 'Configuración', icon: 'mdi-cog', route: '/configuration' },
-          { title: 'Contactar', icon: 'mdi-email', route: '/contact' },
-        ],
-      };
+export default {
+  name: 'MainLayout',
+  data() {
+    return {
+      menuVisible: false,
+      drawer: true,
+      fullName: '',
+      menuItems: [
+        { title: 'Inicio', icon: 'mdi-home', route: '/home' },
+        { title: 'Mi R07', icon: 'mdi-book-variant', route: '/planner' },
+        { title: 'Peticiones de oración', icon: 'mdi-clipboard-text', route: '/petitions' },
+        { title: 'Perfil', icon: 'mdi-account', route: '/profile' },
+        { title: 'Configuración', icon: 'mdi-cog', route: '/configuration' },
+        { title: 'Solicitudes', icon: 'mdi-gmail', route: '/contact' },
+        { title: 'Usuarios', icon: 'mdi-account-multiple-plus', route: '/users' },
+        { title: 'Dashboard', icon: 'mdi-view-dashboard', route: '/dashboard' },
+        { title: 'Admin. Aplicación', icon: 'mdi-application', route: '/application' },
+      ],
+    };
+  },
+  methods: {
+    ...mapActions(['logout']),
+    goHome(){
+      this.$router.push({ path: '/profile', query: { redirected: true } });
     },
-    methods: {
-      cambiarContraseña() {
-        alert('Cambiar contraseña');
-        // Aquí puedes redirigir a una vista o abrir un diálogo
-      },
-      cerrarSesion() {
-        alert('Cerrar sesión');
-        // Aquí puedes implementar la lógica para cerrar sesión
-      },
-    },
-  };
-  </script>
-  
-  <style scoped>
-  /* Asegúrate de que el menú esté por encima de otros elementos */
-  .v-menu__content {
-    z-index: 1000;
+    async cerrarSesion() {
+      try {
+        await this.logout();
+        this.$router.push({ path: '/login', query: { redirected: true } });
+      } catch (error) {
+        console.error('Error al cerrar sesión:', error);
+        alert('Ocurrió un error al cerrar la sesión');
+      }
+    }
+  },
+  computed: {
+    ...mapState(['user'])
+  },
+  mounted() {
+    this.fullName = `${this.user?.firstName || ''} ${this.user?.lastName || ''}`.trim();
   }
-  </style>
+};
+</script>
+
+<style scoped>
+.notification-card {
+  width: 500px !important;
+  top: 10px !important;
+  right: 10px !important;
+  font-size: 20px !important;
+}
+.custom-app-bar {
+  background: linear-gradient(90deg, rgb(var(--v-theme-primary)) 0%, transparent 250%) !important;
+}
+</style>
