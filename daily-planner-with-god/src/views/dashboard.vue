@@ -421,7 +421,6 @@ export default {
 
 .glass-card {
   background: rgba(255, 255, 255, 0.9) !important;
-  backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.3);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -440,7 +439,6 @@ export default {
 .total-chip {
   border-width: 2px;
   font-weight: 500;
-  backdrop-filter: blur(4px);
   background: rgba(255, 255, 255, 0.15) !important;
 }
 
@@ -467,7 +465,6 @@ export default {
 .metric-list {
   background: rgba(255, 255, 255, 0.7);
   border-radius: 14px;
-  backdrop-filter: blur(6px);
   border: 1px solid rgba(255, 255, 255, 0.4);
 }
 

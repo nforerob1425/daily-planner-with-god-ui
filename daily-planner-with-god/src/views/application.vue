@@ -1,5 +1,5 @@
 <template>
-  <v-container class="app-container">
+  <v-container fluid class="app-container config-view">
     <!-- Título principal con gradiente -->
     <h1 class="text-gradient mb-8 animate__animated animate__fadeInDown">Administración de la Aplicación</h1>
 
