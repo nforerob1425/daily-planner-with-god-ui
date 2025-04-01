@@ -357,6 +357,9 @@
       },
   
       preparePayload() {
+        const now = new Date();
+        now.setHours(now.getHours() - 5);
+        
         var data = {
             ...this.localCard,
             primaryColorDateId: this.getColorId(this.localCard.primaryColorDate, 'Title Date Background'),
@@ -364,7 +367,7 @@
             primaryColorId: this.getColorId(this.localCard.primaryColor, 'Primary Background'),
             letterColorId: this.getColorId(this.localCard.letterColor, 'Primary Letter'),
             titleColorId: this.getColorId(this.localCard.titleColor, 'Title'),
-            createDate: this.mode === 'create' ? new Date().toISOString() : this.localCard.createDate,
+            createDate: this.mode === 'create' ? now.toISOString() : this.localCard.createDate,
             title: this.localCard.title?.trim() || '',
             content: this.localCard.content?.trim() || '',
             versicle: this.localCard.versicle?.trim() || null,

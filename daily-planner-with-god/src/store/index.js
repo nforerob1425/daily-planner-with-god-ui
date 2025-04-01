@@ -75,9 +75,9 @@ export default createStore({
         const response = await api.post('/api/Login/login', credentials);
         
         if (response.status === 200) {
-          commit('SET_USER_DATA', response.data);
+          commit('SET_USER_DATA', response.data.data);
           commit('SET_ERROR', null);
-          return response.data;
+          return response.data.data;
         }
         
       } catch (error) {

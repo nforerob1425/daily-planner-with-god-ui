@@ -288,10 +288,13 @@ export default {
     },
     async createPetition() {
       try {
+        const now = new Date();
+        now.setHours(now.getHours() - 5);
+
         const newPetition = {
           ...this.newPetition,
           userId: this.user.id,
-          createdDate: new Date().toISOString()
+          createdDate: now.toISOString()
         }
         const response = await api.post('/api/petitions', newPetition)
         this.petitions.unshift(response.data?.data)
