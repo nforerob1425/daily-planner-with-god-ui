@@ -25,12 +25,14 @@ export default createStore({
       state.token = token;
       localStorage.setItem('authData', JSON.stringify(payload));
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      api.defaults.headers.common['UserId'] = `${userData.id}`;
     },
     CLEAR_USER_DATA(state) {
       state.user = null;
       state.token = null;
       localStorage.removeItem('authData');
       delete api.defaults.headers.common['Authorization'];
+      delete api.defaults.headers.common['UserId'];
     },
     UPDATE_USER_CONFIG(state, config) {
       state.user.configurationId = config.configurationId
