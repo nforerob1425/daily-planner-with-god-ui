@@ -6,6 +6,7 @@ import vuetify from './plugins/vuetify'
 import { loadFonts } from './plugins/webfontloader'
 import "@/assets/styles.scss";
 import Notifications from '@kyvg/vue3-notification'
+import 'animate.css'
 
 loadFonts();
 
