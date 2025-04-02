@@ -55,7 +55,7 @@
       </v-list>
     </v-card>
 
-    <!-- Sección de Colores mejorada -->
+    <!-- Sección de Colores -->
     <v-row class="color-section">
       <v-col 
         cols="12" 
@@ -256,6 +256,7 @@ export default {
       agendas: [],
       colors: [],
       types: [],
+      appConfigs: [],
       agendaDialog: false,
       colorDialog: false,
       isEditAgenda: false,
@@ -390,12 +391,22 @@ export default {
         console.error('Error fetching types:', error);
         this.handleError(error);
       }
-    }
+    },
+    async fetchConfigs() {
+      try {
+        const response = await api.get('/api/AppAdministration/appConfigs');
+        this.appConfigs = response.data?.data || [];
+      } catch (error) {
+        console.error('Error fetching app configs:', error);
+        this.handleError(error);
+      }
+    },
   },
   mounted() {
     this.fetchAgendas();
     this.fetchColors();
     this.fetchColorTypes();
+    this.fetchConfigs();
   }
 };
 </script>

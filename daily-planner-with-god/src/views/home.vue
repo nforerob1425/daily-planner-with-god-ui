@@ -127,17 +127,6 @@
                   class="mb-4 input-glass"
                   prepend-inner-icon="mdi-text-box"
                 ></v-textarea>
-
-                <v-checkbox
-                  v-model="formData.isGlobal"
-                  label="Noticia Global"
-                  color="primary"
-                  class="checkbox-custom"
-                >
-                  <template v-slot:label>
-                    <span class="checkbox-label">🌍 Noticia Global</span>
-                  </template>
-                </v-checkbox>
               </div>
 
               <!-- Columna Derecha -->
@@ -235,12 +224,13 @@ export default {
   data() {
     return {
       ads: [],
+      appConfigs: [],
       dialog: false,
       editingAd: null,
       startDateMenu: false,
       endDateMenu: false,
       loading: false,
-      youtubeLink: 'https://www.youtube.com/watch?v=IehHIQZ6R74&t=127s',
+      youtubeLink: '',
       formData: {
         title: '',
         content: '',
@@ -365,10 +355,22 @@ export default {
         console.error('Error deleting ad:', error);
         alert('Error al eliminar la noticia');
       }
-    }
+    },
+    async fetchConfigs() {
+      try {
+        const response = await api.get('/api/AppAdministration/appConfigs');
+        this.appConfigs = response.data?.data || [];
+        const result = this.appConfigs.find(item => item.name === "HomeVideoUrl");
+        this.youtubeLink = result?.value
+      } catch (error) {
+        console.error('Error fetching app configs:', error);
+        this.handleError(error);
+      }
+    },
   },
   mounted() {
     this.fetchAds();
+    this.fetchConfigs();
   }
 };
 </script>

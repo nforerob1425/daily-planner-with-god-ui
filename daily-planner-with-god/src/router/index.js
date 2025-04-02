@@ -39,6 +39,9 @@ const routes = [
 const router = createRouter({
   history: createWebHistory(),
   routes,
+  scrollBehavior() {
+    return { top: 0, behavior: 'smooth' }; // Desplaza al inicio con efecto suave
+  }
 });
 
 // Guard de navegación
