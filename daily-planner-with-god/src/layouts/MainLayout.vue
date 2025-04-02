@@ -54,9 +54,6 @@ export default {
   },
   methods: {
     ...mapActions(['logout']),
-    goHome(){
-      this.$router.push({ path: '/profile', query: { redirected: true } });
-    },
     async cerrarSesion() {
       try {
         await this.logout();

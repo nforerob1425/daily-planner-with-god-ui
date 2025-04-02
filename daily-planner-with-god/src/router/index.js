@@ -4,7 +4,7 @@ import store from '@/store';
 const routes = [
   {
     path: '/',
-    redirect: '/planner',
+    redirect: '/home',
   },
   {
     path: '/',
