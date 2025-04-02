@@ -56,7 +56,7 @@
     </v-card>
 
     <!-- Sección de Colores -->
-    <v-row class="color-section">
+    <v-row class="color-section mb-8">
       <v-col 
         cols="12" 
         md="6" 
@@ -104,8 +104,50 @@
           </v-card-text>
         </v-card>
       </v-col>
-    </v-row>
+      <v-col cols="12" 
+        md="6" 
+        lg="4"
+        class="animate__animated animate__fadeInUp">
 
+        <!-- Sección de Configuraciones -->
+        <v-card class="color-card" elevation="4">
+          <v-card-title class="card-header">
+            <v-icon large color="white" class="mr-2">mdi-cog-outline</v-icon>
+            Configuraciones Generales
+          </v-card-title>
+          
+          <v-list class="config-list" lines="two">
+            <transition-group name="list">
+              <v-list-item 
+                v-for="config in appConfigs" 
+                :key="config.id" 
+                class="list-item-hover ml-5 mr-5"
+              >
+                <template #prepend>
+                  <v-icon class="icon-config">mdi-tune</v-icon>
+                </template>
+                
+                <v-list-item-title class="d-flex align-center">
+                  <span class="config-name">{{ config.name }}</span>
+                  <v-spacer></v-spacer>
+                  <span class="config-value">{{ config.value }}</span>
+                </v-list-item-title>
+
+                <template #append>
+                  <v-btn 
+                    icon 
+                    @click.stop="openConfigDialog(config)"
+                    class="btn-edit"
+                  >
+                    <v-icon color="primary">mdi-pencil</v-icon>
+                  </v-btn>
+                </template>
+              </v-list-item>
+            </transition-group>
+          </v-list>
+        </v-card>
+      </v-col>
+    </v-row>
     <!-- Diálogo para Agenda -->
     <v-dialog v-model="agendaDialog" max-width="600">
       <v-card class="dialog-card">
@@ -242,6 +284,55 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <!-- Diálogo para Configuración -->
+    <v-dialog v-model="configDialog" max-width="600">
+      <v-card class="dialog-card">
+        <v-card-title class="dialog-header">
+          ✏️ Editar Configuración
+        </v-card-title>
+        <v-card-text>
+          <v-form ref="configForm">
+            <v-text-field
+              v-model="selectedConfig.name"
+              label="Nombre"
+              readonly
+              disabled
+              variant="outlined"
+              color="primary"
+            ></v-text-field>
+
+            <v-textarea
+              v-model="selectedConfig.value"
+              label="Valor"
+              :rules="requiredRule"
+              rows="3"
+              variant="outlined"
+              color="primary"
+              auto-grow
+            ></v-textarea>
+          </v-form>
+        </v-card-text>
+        <v-card-actions class="dialog-actions">
+          <v-btn 
+            @click="configDialog = false" 
+            variant="outlined"
+            color="grey-darken-2"
+          >
+            Cancelar
+          </v-btn>
+          <v-spacer></v-spacer>
+          <v-btn 
+            color="primary" 
+            @click="saveConfig"
+            variant="flat"
+          >
+            <v-icon left>mdi-content-save</v-icon>
+            Guardar
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -259,10 +350,12 @@ export default {
       appConfigs: [],
       agendaDialog: false,
       colorDialog: false,
+      configDialog: false,
       isEditAgenda: false,
       isEditColor: false,
       selectedAgenda: this.emptyAgenda(),
       selectedColor: this.emptyColor(),
+      selectedConfig: this.emptyConfig(),
       requiredRule: [v => !!v || 'Campo requerido'],
       numberRule: [
         v => !!v || 'Campo requerido',
@@ -296,6 +389,13 @@ export default {
         color: '#FFFFFF'
       }
     },
+    emptyConfig() {
+      return {
+        id: null,
+        name: '',
+        value: ''
+      }
+    },
     openAgendaDialog(agenda) {
       this.isEditAgenda = !!agenda;
       this.selectedAgenda = agenda ? {...agenda} : this.emptyAgenda();
@@ -305,6 +405,23 @@ export default {
       this.isEditColor = !!color;
       this.selectedColor = color ? {...color} : {...this.emptyColor(), typeId: type.id};
       this.colorDialog = true;
+    },
+    openConfigDialog(config) {
+      this.selectedConfig = { ...config };
+      this.configDialog = true;
+    },
+
+    async saveConfig() {
+      if (!this.$refs.configForm.validate()) return;
+      
+      try {
+        await api.post('/api/AppAdministration/appConfigs', this.selectedConfig);
+        await this.fetchConfigs();
+        this.configDialog = false;
+      } catch (error) {
+        console.error('Error saving config:', error);
+        this.handleError(error);
+      }
     },
     async saveAgenda() {
       if (!this.$refs.agendaForm.validate()) return;
@@ -433,7 +550,7 @@ export default {
 .card-header {
   background: linear-gradient(45deg, #2196F3, #3F51B5);
   color: white !important;
-  padding: 1.5rem !important;
+  padding: 1rem !important;
   border-radius: 12px 12px 0 0 !important;
 }
 
@@ -582,6 +699,39 @@ export default {
   
   .color-card {
     margin-bottom: 1.5rem;
+  }
+}
+
+.config-name {
+  font-weight: 600;
+  color: #2c3e50;
+  min-width: 200px;
+}
+
+.config-value {
+  color: #7f8c8d;
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icon-config {
+  color: #2196F3 !important;
+  margin-right: 1rem;
+}
+
+.btn-edit {
+  transition: all 0.2s ease;
+}
+
+.btn-edit:hover {
+  transform: scale(1.15);
+}
+
+@media (max-width: 768px) {
+  .config-value {
+    max-width: 200px;
   }
 }
 </style>

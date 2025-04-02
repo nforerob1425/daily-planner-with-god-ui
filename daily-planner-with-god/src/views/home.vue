@@ -364,7 +364,7 @@ export default {
         this.youtubeLink = result?.value
       } catch (error) {
         console.error('Error fetching app configs:', error);
-        this.handleError(error);
+        alert('Error al eliminar la noticia');
       }
     },
   },
