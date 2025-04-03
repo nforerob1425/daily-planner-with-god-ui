@@ -6,14 +6,13 @@
           <div class="d-flex justify-space-between align-center mb-6">
             <h2 class="text-h3 gradient-text">Anuncios</h2>
             <v-btn 
+              icon
               color="primary" 
               class="animated-btn"
               x-large
               @click="openEditor()"
             >
               <v-icon left>mdi-plus</v-icon>
-              Nueva Noticia
-              <v-icon right>mdi-arrow-up</v-icon>
             </v-btn>
           </div>
 

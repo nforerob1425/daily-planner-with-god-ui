@@ -1,225 +1,324 @@
 <template>
-  <v-dialog :value="value" fullscreen persistent>
-    <v-card class="dialog-card">
-      <!-- Botones de navegación -->
-      <v-btn
-        icon="mdi-chevron-left"
-        fab
-        dark
-        color="primary"
-        class="nav-btn left"
-        :disabled="currentPage === 0"
-        @click="prevPage"
-      />
-      
-      <v-btn
-        icon="mdi-chevron-right"
-        fab
-        dark
-        color="primary"
-        class="nav-btn right"
-        :disabled="currentPage >= groupedByMonth.length - 1"
-        @click="nextPage"
-      />
+  <v-dialog :value="value" fullscreen persistent style="z-index: 2000;">
+    <v-container fluid class="pa-0 dialog-container" >
+      <v-card class="dialog-card">
+        <!-- Botones de navegación -->
+        <v-btn
+          icon="mdi-chevron-left"
+          fab
+          dark
+          color="blue-darken-4"
+          class="nav-btn left"
+          :disabled="currentPage === 0"
+          @click="prevPage"
+        />
+        
+        <v-btn
+          icon="mdi-chevron-right"
+          fab
+          dark
+          color="blue-darken-4"
+          class="nav-btn right"
+          :disabled="currentPage >= groupedByMonth.length - 1"
+          @click="nextPage"
+        />
 
-      <v-tooltip text="Tooltip" location="left">
-        <template v-slot:activator="{ props }">
-          <v-btn 
-            v-bind="props"
-            icon="mdi-plus"
-            fab
-            dark
-            color="primary"
-            class="floating-add-btn"
-            @click="openCreateDialog"
-          />
-        </template>
-        <span>Registra lo que Dios te dice hoy</span>
-      </v-tooltip>
+        <v-tooltip text="Tooltip" location="left">
+          <template v-slot:activator="{ props }">
+            <v-btn 
+              v-bind="props"
+              icon="mdi-plus"
+              fab
+              dark
+              color="blue-darken-4"
+              class="floating-add-btn"
+              @click="openCreateDialog"
+            />
+          </template>
+          <span>Registra lo que Dios te dice hoy</span>
+        </v-tooltip>
 
-      <card-dialog
-        :show="showCreateDialog"
-        :colors="colors"
-        :initial-data="selectedCard"
-        :mode="editMode ? 'edit' : 'create'"
-        @close="closeCreateDialog"
-        @save="handleCardSave"
-      />
+        <v-tooltip text="Notas" location="left">
+          <template v-slot:activator="{ props }">
+            <v-btn 
+              v-bind="props"
+              icon="mdi-note-text"
+              fab
+              dark
+              color="deep-orange-lighten-1"
+              class="floating-notes-btn"
+              @click.stop="notesDialog = true"
+            />
+          </template>
+          <span>Ver notas</span>
+        </v-tooltip>
 
-      <v-tooltip text="Tooltip" location="left"  v-if="this.user.hasLead && this.hasItemsReported">
-        <template v-slot:activator="{ props }">
-          <v-btn 
-            v-bind="props"
-            v-if="this.user.hasLead"
-            icon="mdi-clipboard-text"
-            fab
-            dark
-            color="green"
-            class="floating-reported-btn"
-            @click="reportPlanner"
-          />
-        </template>
-        <span>Reporta tu R07 a tu lider</span>
-      </v-tooltip>
-
-      <v-btn 
-        icon="mdi-close" 
-        variant="flat" 
-        color="error" 
-        class="close-btn"
-        @click="$emit('close')"
-      ></v-btn>
-      
-      <v-container fluid class="pa-5 dialog-container">
-        <transition :name="transitionName" mode="out-in">
-          <div 
-            :key="currentPage" 
-            class="transition-wrapper config-view"
-          >
-          <div 
-            v-for="(month, index) in groupedByMonth" 
-            :key="month.name" 
-            class="month-section"
-            v-show="currentPage === index"
-          >
-            <v-row class="month-header sticky-header">
-              <v-col cols="12">
-                <h2 class="text-h4 font-weight-bold month-title">
-                  {{ getSpanishMonth(month.name) }}
-                  <v-chip class="ml-2" color="primary">
-                    {{ month.items.length }}
-                  </v-chip>
-                  <v-btn 
-                    v-if="month.items.length > 0"
-                    @click="generateMonthPDF(month.name)"
-                    color="secondary"
-                    class="ml-2"
-                    size="small"
-                  >
-                    <v-icon left>mdi-download</v-icon>
-                    PDF
-                  </v-btn>
-                </h2>
-              </v-col>
-            </v-row>
+        <v-dialog v-model="noteDialog" max-width="500">
+          <v-card class="coffee-board">
+            <v-toolbar color="brown darken-2" dark>
+              <v-toolbar-title>
+                {{ editingNote ? 'Editar Nota' : 'Nueva Nota' }}
+              </v-toolbar-title>
+            </v-toolbar>
             
-            <v-row class="month-content pt-9 pb-5 sunken-card config-view" :id="'month-' + month.name" >
-              <v-col 
-                v-for="item in month.items" 
-                :key="item.id" 
-                cols="12" 
-                sm="6" 
-                md="4" 
-                lg="3" 
-                xl="2"
-              >
-                <v-card 
-                  elevation="8" 
-                  :color="item.primaryColor" 
-                  class="custom-card flex-grow-1"
-                  :style="{ '--title-color': item.titleColor }"
-                >
-                  <div 
-                    class="user-label" 
-                    v-if="shouldShowUserLabel(item)"
-                    :style="{ 
-                      background: item.letterColor, 
-                      color: item.primaryColor 
-                    }"
-                  >
-                    {{ item.originalUserFullName }}
-                  </div>
+            <v-card-text>
+              <v-textarea
+                v-model="currentNote.content"
+                label="Contenido"
+                rows="3"
+                auto-grow
+                class="yellow-note-editor"
+              ></v-textarea>
+            </v-card-text>
 
-                  <div class="card-header">
-                    <div v-if="!item.reported" class="edit-btn" @click.stop="openEditDialog(item)">
-                      <v-icon>mdi-pencil</v-icon>
-                    </div>
+            <v-card-actions class="pa-4">
+              <v-spacer></v-spacer>
+              <v-btn color="red lighten-1" @click="noteDialog = false">Cancelar</v-btn>
+              <v-btn color="amber darken-3" @click="saveNote">Guardar</v-btn>
+            </v-card-actions>
+          </v-card>
+        </v-dialog>
 
-                    <div v-if="!item.reported" class="delete-btn" @click="deleteCard(item)">
-                      <v-icon>mdi-delete</v-icon>
-                    </div>
+        <card-dialog
+          :show="showCreateDialog"
+          :colors="colors"
+          :initial-data="selectedCard"
+          :mode="editMode ? 'edit' : 'create'"
+          @close="closeCreateDialog"
+          @save="handleCardSave"
+        />
 
-                    <v-tooltip text="Tooltip" location="top"  v-if="item.reported && !shouldShowUserLabel(item)">
-                      <template v-slot:activator="{ props }">
-                        <div class="report-ok-btn">
-                          <v-icon v-bind="props">mdi-bookmark-check</v-icon>
-                        </div>
-                      </template>
-                      <span>Ya esta reportada a tu lider</span>
-                    </v-tooltip>
+        <v-tooltip text="Tooltip" location="left"  v-if="this.user.hasLead && this.hasItemsReported">
+          <template v-slot:activator="{ props }">
+            <v-btn 
+              v-bind="props"
+              v-if="this.user.hasLead"
+              icon="mdi-clipboard-text"
+              fab
+              dark
+              color="green"
+              class="floating-reported-btn"
+              @click="reportPlanner"
+            />
+          </template>
+          <span>Reporta tu R07 a tu lider</span>
+        </v-tooltip>
 
-                    <div class="date-badge">
-                      <span 
-                        class="month" 
-                        :style="{ 
-                          color: item.letterDateColor,
-                          textShadow: `
-                            0.05em 0.05em 0.1em ${getContrastShadow(item.primaryColorDate)},
-                            -0.05em -0.05em 0.1em ${getLightShadow(item.primaryColorDate)}
-                          `
-                        }"
-                      >
-                        {{ getSpanishMonth(item.monthCreated) }}
-                      </span>
-                      <span 
-                        class="day" 
-                        :style="{ 
-                          backgroundColor: item.primaryColorDate,
-                          color: item.letterDateColor
-                        }"
-                      >
-                        {{ item.dayCreated }}
-                      </span>
-                    </div>
-
+        <v-btn 
+          icon="mdi-close" 
+          variant="flat" 
+          color="error" 
+          class="close-btn"
+          @click="$emit('close')"
+        ></v-btn>
+        
+        <v-container fluid class="pa-5 dialog-container">
+          <transition :name="transitionName" mode="out-in">
+            <div 
+              :key="currentPage" 
+              class="transition-wrapper config-view"
+            >
+            <div 
+              v-for="(month, index) in groupedByMonth" 
+              :key="month.name" 
+              class="month-section"
+              v-show="currentPage === index"
+            >
+              <v-row class="month-header sticky-header">
+                <v-col cols="12">
+                  <h2 class="text-h4 font-weight-bold month-title">
+                    {{ getSpanishMonth(month.name) }}
+                    <v-chip class="ml-2" color="primary">
+                      {{ month.items.length }}
+                    </v-chip>
                     <v-btn 
-                        icon="mdi-star"
-                        variant="text"
-                        v-if="!shouldShowUserLabel(item)"
-                        class="favorite-icon"
-                        :color="item.favorite ? 'yellow' : 'grey'"
-                        @click="setFavorite(item.id); item.favorite = !item.favorite"
-                      >
-                      </v-btn>
-
-                  </div>
-
-                  <div class="card-content">
-                    <v-card-title class="card-title">
-                      <span 
-                        class="title-text" 
-                        :style="{ color: item.titleColor }"
-                      >
-                        {{ item.title }}
-                      </span>
-                    </v-card-title>
-
-                    <v-card-subtitle class="versicle">
-                      <v-icon small :color="item.titleColor">mdi-book-variant</v-icon>
-                      <span :style="{ color: item.letterColor }">
-                        {{ item.versicle }}
-                      </span>
-                    </v-card-subtitle>
-
-                    <v-card-text 
-                      class="content" 
-                      :style="{ color: item.letterColor }"
+                      v-if="month.items.length > 0"
+                      @click="generateMonthPDF(month.name)"
+                      color="secondary"
+                      class="ml-2"
+                      size="small"
                     >
-                      {{ item.content }}
-                    </v-card-text>
-                  </div>
+                      <v-icon left>mdi-download</v-icon>
+                      PDF
+                    </v-btn>
+                  </h2>
+                </v-col>
+              </v-row>
+              
+              <v-row class="month-content pt-9 pb-5 sunken-card config-view" :id="'month-' + month.name" >
+                <v-col 
+                  v-for="item in month.items" 
+                  :key="item.id" 
+                  cols="12" 
+                  sm="6" 
+                  md="4" 
+                  lg="3" 
+                  xl="2"
+                >
+                  <v-card 
+                    elevation="8" 
+                    :color="item.primaryColor" 
+                    class="custom-card flex-grow-1"
+                    :style="{ '--title-color': item.titleColor }"
+                  >
+                    <div 
+                      class="user-label" 
+                      v-if="shouldShowUserLabel(item)"
+                      :style="{ 
+                        background: item.letterColor, 
+                        color: item.primaryColor 
+                      }"
+                    >
+                      {{ item.originalUserFullName }}
+                    </div>
 
-                  <div class="border-effect" :style="{ 
-                    background: `linear-gradient(45deg, ${item.titleColor} 30%, transparent)`
-                  }"></div>
-                </v-card>
-              </v-col>
-            </v-row>
+                    <div class="card-header">
+                      <div v-if="!item.reported" class="edit-btn" @click.stop="openEditDialog(item)">
+                        <v-icon>mdi-pencil</v-icon>
+                      </div>
+
+                      <div v-if="!item.reported" class="delete-btn" @click="deleteCard(item)">
+                        <v-icon>mdi-delete</v-icon>
+                      </div>
+
+                      <v-tooltip text="Tooltip" location="top"  v-if="item.reported && !shouldShowUserLabel(item)">
+                        <template v-slot:activator="{ props }">
+                          <div class="report-ok-btn">
+                            <v-icon v-bind="props">mdi-bookmark-check</v-icon>
+                          </div>
+                        </template>
+                        <span>Ya esta reportada a tu lider</span>
+                      </v-tooltip>
+
+                      <div class="date-badge">
+                        <span 
+                          class="month" 
+                          :style="{ 
+                            color: item.letterDateColor,
+                            textShadow: `
+                              0.05em 0.05em 0.1em ${getContrastShadow(item.primaryColorDate)},
+                              -0.05em -0.05em 0.1em ${getLightShadow(item.primaryColorDate)}
+                            `
+                          }"
+                        >
+                          {{ getSpanishMonth(item.monthCreated) }}
+                        </span>
+                        <span 
+                          class="day" 
+                          :style="{ 
+                            backgroundColor: item.primaryColorDate,
+                            color: item.letterDateColor
+                          }"
+                        >
+                          {{ item.dayCreated }}
+                        </span>
+                      </div>
+
+                      <v-btn 
+                          icon="mdi-star"
+                          variant="text"
+                          v-if="!shouldShowUserLabel(item)"
+                          class="favorite-icon"
+                          :color="item.favorite ? 'yellow' : 'grey'"
+                          @click="setFavorite(item.id); item.favorite = !item.favorite"
+                        >
+                        </v-btn>
+
+                    </div>
+
+                    <div class="card-content">
+                      <v-card-title class="card-title">
+                        <span 
+                          class="title-text" 
+                          :style="{ color: item.titleColor }"
+                        >
+                          {{ item.title }}
+                        </span>
+                      </v-card-title>
+
+                      <v-card-subtitle class="versicle">
+                        <v-icon small :color="item.titleColor">mdi-book-variant</v-icon>
+                        <span :style="{ color: item.letterColor }">
+                          {{ item.versicle }}
+                        </span>
+                      </v-card-subtitle>
+
+                      <v-card-text 
+                        class="content" 
+                        :style="{ color: item.letterColor }"
+                      >
+                        {{ item.content }}
+                      </v-card-text>
+                    </div>
+
+                    <div class="border-effect" :style="{ 
+                      background: `linear-gradient(45deg, ${item.titleColor} 30%, transparent)`
+                    }"></div>
+                  </v-card>
+                </v-col>
+              </v-row>
+              </div>
             </div>
-          </div>
-        </transition>
-      </v-container>
-    </v-card>
+          </transition>
+        </v-container>
+      </v-card>
+
+      <v-dialog 
+        v-model="notesDialog" 
+        hide-overlay
+        transition="slide-x-transition"
+        class="right-dialog"
+      >
+        <v-card class="notes-dialog coffee-board">
+          <v-toolbar color="brown darken-2" dark>
+            <v-toolbar-title>Notas</v-toolbar-title>
+            <v-spacer></v-spacer>
+            <v-btn icon @click="notesDialog = false">
+              <v-icon>mdi-close</v-icon>
+            </v-btn>
+          </v-toolbar>
+
+          <v-container class="pa-4">
+            <v-btn 
+              color="amber darken-3"
+              block
+              @click="openNoteDialog(null)"
+              class="mb-4 create-btn"
+            >
+              <v-icon left>mdi-plus</v-icon>
+              Nueva Nota
+            </v-btn>
+
+            <v-card 
+              v-for="note in notes"
+              :key="note.id"
+              class="mb-3 yellow-note"
+            >
+              <v-card-text>
+                <div class="d-flex justify-space-between align-center">
+                  <span>{{ note.content }}</span>
+                  <div>
+                    <v-btn 
+                      icon="mdi-pencil" 
+                      variant="text"
+                      size="small"
+                      @click="openNoteDialog(note)"
+                    ></v-btn>
+                    <v-btn 
+                      icon="mdi-delete" 
+                      variant="text"
+                      color="error"
+                      size="small"
+                      @click="deleteNote(note.id)"
+                    ></v-btn>
+                  </div>
+                </div>
+              </v-card-text>
+            </v-card>
+        </v-container>
+        </v-card>
+      </v-dialog>
+    </v-container>
   </v-dialog>
 </template>
 
@@ -241,6 +340,7 @@ export default {
     processedReportedItems: Array,
     currentUserFullName: String,
     colors: Array,
+    notes: Array,
     selectedAgendaId: String,
     hasItemsReported: Boolean
   },
@@ -250,7 +350,15 @@ export default {
       selectedCard: null,
       editMode: false,
       currentPage: 0,
-      transitionName: 'slide-next'
+      transitionName: 'slide-next',
+      notesDialog: false,
+      noteDialog: false,
+      currentNote: {
+        id: null,
+        content: '',
+        agendaId: null
+      },
+      editingNote: false
     };
   },
   watch: {
@@ -273,10 +381,7 @@ export default {
 
     setCurrentMonthPage() {
       const currentMonthName = new Date().toLocaleString('en-US', { month: 'long' });
-      console.log(currentMonthName);
-      console.log(this.groupedByMonth);
       const currentIndex = this.groupedByMonth.findIndex(m => m.name === currentMonthName);
-      console.log(currentIndex);
       this.currentPage = currentIndex >= 0 ? currentIndex : 0;
     },
 
@@ -476,6 +581,52 @@ export default {
         }
       }
     },
+
+    openNoteDialog(note) {
+      if (note) {
+        this.currentNote = { ...note };
+        this.editingNote = true;
+      } else {
+        this.currentNote = {
+          id: null,
+          content: '',
+          agendaId: this.selectedAgendaId
+        };
+        this.editingNote = false;
+      }
+      this.noteDialog = true;
+    },
+
+    async saveNote() {
+      try {
+        const payload = {
+          ...this.currentNote,
+          userId: this.user.id
+        };
+
+        if (this.editingNote) {
+          await api.put('/api/Note', payload);
+          this.$emit('note-updated', payload);
+        } else {
+          await api.post('/api/Note', payload);
+          this.$emit('note-created', payload);
+        }
+        
+        this.noteDialog = false;
+        this.$emit('refresh-notes');
+      } catch (error) {
+        console.error('Error saving note:', error);
+      }
+    },
+
+    async deleteNote(noteId) {
+      try {
+        await api.delete(`/api/Note?noteId=${noteId}`);
+        this.$emit('note-deleted', noteId);
+      } catch (error) {
+        console.error('Error deleting note:', error);
+      }
+    },
     
     getContrastShadow(color) {
       return tinycolor(color).isLight() 
@@ -502,8 +653,8 @@ export default {
         'October': 'Octubre', 'November': 'Noviembre', 'December': 'Diciembre'
       }
       return months[month] || month
-    }
-  }
+    },
+  },
 }
 </script>
 
@@ -580,7 +731,7 @@ export default {
   position: fixed;
   top: 20px;
   right: 20px;
-  z-index: 1001;
+  z-index: 2001;
 }
 
 .user-label {
@@ -619,7 +770,7 @@ export default {
 .transition-wrapper {
   position: relative;
   width: 100%;
-  height: 100vh;
+  height: 100%;
   perspective: 1200px;
 }
 
@@ -683,5 +834,195 @@ export default {
   position: absolute;
   left: 0px;
   top: 0px;
+}
+
+/* Diálogo de notas estilo drawer */
+.right-dialog {
+  position: fixed !important;
+  right: 0 !important;
+  top: 0 !important;
+  margin: 0 !important;
+  height: 100vh !important;
+  width: 400px !important;
+  max-width: 100vw !important;
+  box-shadow: -5px 0 15px rgba(0,0,0,0.15) !important;
+  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.5, 1) !important;
+  transform: none !important;
+}
+
+.right-dialog .v-card {
+  height: 100%;
+  border-radius: 20px !important;
+  width: 100%;
+  overflow-y: auto;
+}
+
+/* Transición personalizada */
+.slide-x-transition-enter-active,
+.slide-x-transition-leave-active {
+  transition: transform 0.3s ease-out;
+}
+
+.slide-x-transition-enter-from {
+  transform: translateX(100%);
+}
+
+.slide-x-transition-leave-to {
+  transform: translateX(100%);
+}
+
+/* Ajustes de capas y posicionamiento */
+.v-dialog__container {
+  display: flex !important;
+  justify-content: flex-end !important;
+  align-items: flex-start !important;
+}
+
+/* Eliminar overlay del diálogo */
+.v-dialog:not(.v-dialog--fullscreen) {
+  box-shadow: none !important;
+  background: transparent !important;
+}
+
+/* Asegurar z-index para elementos flotantes */
+.floating-notes-btn {
+  position: fixed;
+  bottom: 160px;
+  right: 20px;
+  z-index: 1001 !important;
+}
+
+.close-btn {
+  z-index: 1002 !important;
+}
+
+/* Optimizar scroll en el contenido */
+.notes-dialog .v-container {
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+  padding-bottom: 80px;
+  scroll-behavior: smooth;
+}
+
+.notes-dialog ::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notes-dialog ::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.notes-dialog ::-webkit-scrollbar-thumb {
+  background: #795548;
+  border-radius: 4px;
+}
+
+/* Ajustes responsive */
+@media (max-width: 600px) {
+  .right-dialog {
+    width: 100% !important;
+  }
+  
+  .notes-dialog .v-card {
+    width: 100%;
+  }
+}
+
+.coffee-board {
+  background: linear-gradient(
+    45deg,
+    #6d4c41 0%,
+    #5d4037 100%
+  ) !important;
+  color: #fff !important;
+  border-radius: 8px !important;
+}
+
+/* Nota amarilla con renglones */
+.yellow-note {
+  background: #fff8e1 !important;
+  border-left: 4px solid #ffd54f !important;
+  position: relative;
+  padding: 20px !important;
+  min-height: 100px;
+  white-space: normal;
+  overflow: hidden;
+}
+
+.yellow-note span {
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 75%; /* Deja espacio para los botones */
+  line-height: 25px !important; /* Alinea con los renglones */
+  display: inline-block;
+}
+
+.yellow-note .v-card-text {
+  width: 100%;
+}
+
+.yellow-note::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: linear-gradient(
+    180deg,
+    transparent 24px,
+    rgba(0, 0, 0, 0.1) 25px
+  );
+  background-size: 100% 25px;
+}
+
+/* Editor de nota amarilla */
+.yellow-note-editor textarea {
+  background: #fff8e1 !important;
+  padding: 15px !important;
+  line-height: 25px !important;
+  background-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.1) 1px,
+    transparent 1px
+  ) !important;
+  background-size: 100% 25px !important;
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+  overflow-y: auto !important;
+}
+
+/* Botón mejorado */
+.create-btn {
+  transform: translateY(0);
+  transition: all 0.3s ease !important;
+  letter-spacing: 1px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16) !important;
+}
+
+.create-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Ajustes adicionales para consistencia */
+.notes-dialog .v-card-text {
+  font-family: 'Handlee', cursive !important;
+  font-size: 1.1rem !important;
+}
+
+.v-card-actions .v-btn {
+  font-weight: 600 !important;
+  letter-spacing: 0.5px !important;
+}
+
+/* Ajustes de color para el diálogo hijo */
+.coffee-board .v-toolbar {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+.coffee-board .v-card-actions {
+  background: rgba(0, 0, 0, 0.1) !important;
 }
 </style>

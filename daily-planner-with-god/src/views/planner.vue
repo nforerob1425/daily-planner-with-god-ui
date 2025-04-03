@@ -85,11 +85,16 @@
       :colors="colors"
       :selected-agenda-id="selectedAgendaId"
       :has-items-reported="hasItemsToReported"
+      :notes="notes"
       @close="dialog = false"
       @card-created="handleNewCard"
       @card-updated="handleCardUpdate"
       @card-deleted="handleDeleteCard"
       @planner-reported="plannerReported"
+      @note-created="handleNoteCreated"
+      @note-updated="handleNoteUpdated"
+      @note-deleted="handleNoteDeleted"
+      @refresh-notes="fetchNotes"
     />
   </v-container>
 </template>
@@ -119,6 +124,7 @@ export default {
       items: [],
       colors: [],
       data: [],
+      notes: [],
     };
   },
   computed: {
@@ -169,6 +175,7 @@ export default {
     ...mapActions(['logout']),
     openDialog(agendaId) {
       this.selectedAgendaId = agendaId;
+      this.fetchNotes();
       this.filteredItems = this.groupedCardsByAgenda[agendaId] || [];
       if (this.dialog) {
         this.dialog = false;
@@ -223,6 +230,18 @@ export default {
           }
         });
     },
+    fetchNotes() {
+      api.get(`/api/Note?agendaId=${this.selectedAgendaId}`)
+        .then(response => {
+          this.notes = response.data?.data || [];
+        })
+        .catch(error => {
+          console.error('Error fetching notes:', error);
+          if (error.response.status === 401) {
+            this.logout();
+          }
+        });
+    },
     handleNewCard(newCard) {
       this.items.unshift(newCard);
       this.items.sort((a, b) => new Date(a.created) - new Date(b.created));
@@ -243,6 +262,21 @@ export default {
     async plannerReported() {
       await this.fetchItems();
       this.filteredItems = this.groupedCardsByAgenda[this.selectedAgendaId] || [];
+    },
+
+    async handleNoteCreated(newNote) {
+      this.notes.push(newNote);
+    },
+
+    handleNoteUpdated(updatedNote) {
+      const index = this.notes.findIndex(n => n.id === updatedNote.id);
+      if (index >= 0) {
+        this.notes.splice(index, 1, updatedNote);
+      }
+    },
+
+    handleNoteDeleted(noteId) {
+      this.notes = this.notes.filter(n => n.id !== noteId);
     }
   },
   mounted() {
