@@ -297,6 +297,65 @@
       {{ snackbar.message }}
     </v-snackbar>
   </v-container>
+
+  <v-btn
+    icon
+    color="secondary"
+    fab
+    dark
+    position="right"
+    class="floating-permission-btn"
+    @click="permissionsDialog = true"
+  >
+    <v-icon>mdi-shield-account</v-icon>
+  </v-btn>
+
+  <!-- Diálogo de permisos -->
+  <v-dialog v-model="permissionsDialog" max-width="800" scrollable>
+    <v-card rounded="lg">
+      <v-card-title class="bg-primary pa-4 header-gradient">
+        <v-icon color="white" class="mr-3">mdi-shield-cog</v-icon>
+        <span class="text-h5 text-white">Administrar Permisos Temporales</span>
+      </v-card-title>
+
+      <v-card-text class="mt-4">
+        <v-select
+          v-model="selectedRole"
+          :items="roles"
+          item-title="name"
+          item-value="id"
+          label="Seleccionar Rol"
+          variant="outlined"
+          return-object
+          @update:model-value="loadRolePermissions"
+        ></v-select>
+
+        <v-table density="comfortable" fixed-header height="500px" v-if="selectedRole != null">
+          <thead>
+            <tr>
+              <th>Nombre en Sistema</th>
+              <th>Descripción</th>
+              <th>Habilitado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="permission in permissions" :key="permission.id">
+              <td>{{ permission.systemName }}</td>
+              <td>{{ permission.description }}</td>
+              <td>
+                <v-checkbox
+                  :model-value="isPermissionEnabled(permission.id)"
+                  @update:model-value="togglePermission(permission.id, $event)"
+                  hide-details
+                  :disabled="!selectedRole"
+                ></v-checkbox>
+              </td>
+            </tr>
+          </tbody>
+        </v-table>
+      </v-card-text>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>
@@ -319,9 +378,12 @@ export default {
       leadLoading: false,
       leadSearchResults: [],
       selectedRoleScale: null,
-
+      permissionsDialog: false,
+      selectedRole: null,
       users: [],
       roles: [],
+      permissions: [],
+      temporalPermissions: [],
       isEditing: false,
       isSaving: false,
       form: {
@@ -384,9 +446,35 @@ export default {
       try {
         await this.fetchRoles();
         await this.fetchUsers();
+        await this.fetchPermissions();
+        await this.fetchTemporalPermissions();
       } finally {
         this.isLoading = false;
       }
+    },
+
+    async fetchPermissions() {
+      try {
+        const response = await api.get('/api/Permission');
+        this.permissions = response.data.data;
+      } catch (error) {
+        console.error('Error fetching items:', error);
+        if (error.response.status === 401) {
+          this.logout();
+        }
+       }
+    },
+
+    async fetchTemporalPermissions() {
+      try {
+        const response = await api.get('/api/TemporalPermission');
+        this.temporalPermissions = response.data.data;
+      } catch (error) {
+        console.error('Error fetching items:', error);
+        if (error.response.status === 401) {
+          this.logout();
+        }
+       }
     },
 
     async fetchUsers() {
@@ -606,7 +694,44 @@ export default {
         message,
         color: 'error'
       };
-    }
+    },
+
+    isPermissionEnabled(permissionId) {
+      if (!this.selectedRole) return false;
+      return this.temporalPermissions.some(tp => 
+        tp.roleId === this.selectedRole.id && 
+        tp.permissionId === permissionId
+      );
+    },
+
+    async togglePermission(permissionId, enabled) {
+      try {
+        if (enabled) {
+          await api.post('/api/TemporalPermission', {
+            roleId: this.selectedRole.id,
+            permissionId: permissionId
+          });
+        } else {
+          const tempPerm = this.temporalPermissions.find(tp => 
+            tp.roleId === this.selectedRole.id && 
+            tp.permissionId === permissionId
+          );
+          if (tempPerm) {
+            await api.delete(`/api/TemporalPermission/${tempPerm.id}`);
+          }
+        }
+        this.showSuccess('Permiso actualizado correctamente');
+        await this.fetchTemporalPermissions();
+      } catch (error) {
+        console.error('Error updating permission:', error);
+        this.showError('Error al actualizar el permiso');
+      }
+    },
+
+    loadRolePermissions() {
+      // Forzar actualización de la tabla
+      this.temporalPermissions = [...this.temporalPermissions];
+    },
   }
 };
 </script>
@@ -683,5 +808,29 @@ export default {
 .v-col-12 {
     flex: 0 1 100%;
     max-width: 100%;
+}
+
+.floating-permission-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  transform: scale(1.1);
+  transition: all 0.3s ease;
+}
+
+.floating-permission-btn:hover {
+  transform: scale(1.2) rotate(15deg);
+}
+
+.v-table {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+th {
+  background-color: #f5f5f5;
+  font-weight: 600;
 }
 </style>
