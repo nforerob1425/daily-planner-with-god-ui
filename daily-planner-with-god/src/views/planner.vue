@@ -144,17 +144,17 @@ export default {
     },
     groupedByMonth() {
       const grouped = this.filteredItems?.reduce((acc, item) => {
-        const month = item.monthCreated;
+        const month = new Date(item.created).toLocaleString('en-US', { month: 'long' });
         if (!acc[month]) acc[month] = [];
         acc[month].push(item);
         return acc;
-      }, {}) || {};
+      }, {});
 
-      return MONTHS_ORDER.map(month => ({
-        name: month,
-        items: grouped[month] || [],
-        spanishName: this.getSpanishMonth(month)
-      }));
+      return MONTHS_ORDER
+        .map(month => ({
+          name: month,
+          items: grouped?.[month] || [],
+        }))
     },
     groupedCardsByAgenda() {
       return this.items?.reduce((acc, card) => {

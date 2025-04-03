@@ -1,6 +1,27 @@
 <template>
   <v-dialog :value="value" fullscreen persistent>
     <v-card class="dialog-card">
+      <!-- Botones de navegación -->
+      <v-btn
+        icon="mdi-chevron-left"
+        fab
+        dark
+        color="primary"
+        class="nav-btn left"
+        :disabled="currentPage === 0"
+        @click="prevPage"
+      />
+      
+      <v-btn
+        icon="mdi-chevron-right"
+        fab
+        dark
+        color="primary"
+        class="nav-btn right"
+        :disabled="currentPage >= groupedByMonth.length - 1"
+        @click="nextPage"
+      />
+
       <v-tooltip text="Tooltip" location="left">
         <template v-slot:activator="{ props }">
           <v-btn 
@@ -16,7 +37,6 @@
         <span>Registra lo que Dios te dice hoy</span>
       </v-tooltip>
 
-      
       <card-dialog
         :show="showCreateDialog"
         :colors="colors"
@@ -51,154 +71,153 @@
       ></v-btn>
       
       <v-container fluid class="pa-5 dialog-container">
-        <div 
-          v-for="month in groupedByMonth" 
-          :key="month.name" 
-          :id="'month-' + month.name" 
-          class="month-section"
-        >
-          <v-row class="month-header sticky-header">
-            <v-col cols="12">
-              <h2 class="text-h4 font-weight-bold month-title">
-                {{ getSpanishMonth(month.name) }}
-                <v-chip class="ml-2" color="primary">
-                  {{ month.items.length }}
-                </v-chip>
-                <v-btn 
-                  v-if="month.items.length > 0"
-                  @click="generateMonthPDF(month.name)"
-                  color="secondary"
-                  class="ml-2"
-                  size="small"
-                >
-                  <v-icon left>mdi-download</v-icon>
-                  PDF
-                </v-btn>
-              </h2>
-            </v-col>
-          </v-row>
-          
-          <v-row class="month-content pt-9">
-            <v-col 
-              v-for="item in month.items" 
-              :key="item.id" 
-              cols="12" 
-              sm="6" 
-              md="4" 
-              lg="3" 
-              xl="2"
-            >
-              <v-card 
-                elevation="8" 
-                :color="item.primaryColor" 
-                class="custom-card flex-grow-1"
-                :style="{ '--title-color': item.titleColor }"
-              >
-                <div 
-                  class="user-label" 
-                  v-if="shouldShowUserLabel(item)"
-                  :style="{ 
-                    background: item.letterColor, 
-                    color: item.primaryColor 
-                  }"
-                >
-                  {{ item.originalUserFullName }}
-                </div>
-
-                <div class="card-header">
-                  <div v-if="!item.reported" class="edit-btn" @click.stop="openEditDialog(item)">
-                    <v-icon>mdi-pencil</v-icon>
-                  </div>
-
-                  <div v-if="!item.reported" class="delete-btn" @click="deleteCard(item)">
-                    <v-icon>mdi-delete</v-icon>
-                  </div>
-
-                  <v-tooltip text="Tooltip" location="top"  v-if="item.reported && !shouldShowUserLabel(item)">
-                    <template v-slot:activator="{ props }">
-                      <div class="report-ok-btn">
-                        <v-icon v-bind="props">mdi-bookmark-check</v-icon>
-                      </div>
-                    </template>
-                    <span>Ya esta reportada a tu lider</span>
-                  </v-tooltip>
-
-                  <div class="date-badge">
-                    <span 
-                      class="month" 
-                      :style="{ 
-                        color: item.letterDateColor,
-                        textShadow: `
-                          0.05em 0.05em 0.1em ${getContrastShadow(item.primaryColorDate)},
-                          -0.05em -0.05em 0.1em ${getLightShadow(item.primaryColorDate)}
-                        `
-                      }"
-                    >
-                      {{ getSpanishMonth(item.monthCreated) }}
-                    </span>
-                    <span 
-                      class="day" 
-                      :style="{ 
-                        backgroundColor: item.primaryColorDate,
-                        color: item.letterDateColor
-                      }"
-                    >
-                      {{ item.dayCreated }}
-                    </span>
-                  </div>
-
-                  <v-btn 
-                      icon="mdi-star"
-                      variant="text"
-                      v-if="!shouldShowUserLabel(item)"
-                      class="favorite-icon"
-                      :color="item.favorite ? 'yellow' : 'grey'"
-                      @click="setFavorite(item.id); item.favorite = !item.favorite"
-                    >
-                    </v-btn>
-
-                </div>
-
-                <div class="card-content">
-                  <v-card-title class="card-title">
-                    <span 
-                      class="title-text" 
-                      :style="{ color: item.titleColor }"
-                    >
-                      {{ item.title }}
-                    </span>
-                  </v-card-title>
-
-                  <v-card-subtitle class="versicle">
-                    <v-icon small :color="item.titleColor">mdi-book-variant</v-icon>
-                    <span :style="{ color: item.letterColor }">
-                      {{ item.versicle }}
-                    </span>
-                  </v-card-subtitle>
-
-                  <v-card-text 
-                    class="content" 
-                    :style="{ color: item.letterColor }"
-                  >
-                    {{ item.content }}
-                  </v-card-text>
-                </div>
-
-                <div class="border-effect" :style="{ 
-                  background: `linear-gradient(45deg, ${item.titleColor} 30%, transparent)`
-                }"></div>
-              </v-card>
-            </v-col>
-
-            <template v-if="month.items.length === 0">
+        <transition :name="transitionName" mode="out-in">
+          <div 
+            :key="currentPage" 
+            class="transition-wrapper"
+          >
+          <div 
+            v-for="(month, index) in groupedByMonth" 
+            :key="month.name" 
+            class="month-section"
+            v-show="currentPage === index"
+          >
+            <v-row class="month-header sticky-header">
               <v-col cols="12">
-                <div class="empty-month text-body-1">
-                  No hay cards para este mes
-                </div>
+                <h2 class="text-h4 font-weight-bold month-title">
+                  {{ getSpanishMonth(month.name) }}
+                  <v-chip class="ml-2" color="primary">
+                    {{ month.items.length }}
+                  </v-chip>
+                  <v-btn 
+                    v-if="month.items.length > 0"
+                    @click="generateMonthPDF(month.name)"
+                    color="secondary"
+                    class="ml-2"
+                    size="small"
+                  >
+                    <v-icon left>mdi-download</v-icon>
+                    PDF
+                  </v-btn>
+                </h2>
               </v-col>
-            </template>
-          </v-row>
-        </div>
+            </v-row>
+            
+            <v-row class="month-content pt-9 pb-5 sunken-card config-view">
+              <v-col 
+                v-for="item in month.items" 
+                :key="item.id" 
+                cols="12" 
+                sm="6" 
+                md="4" 
+                lg="3" 
+                xl="2"
+              >
+                <v-card 
+                  elevation="8" 
+                  :color="item.primaryColor" 
+                  class="custom-card flex-grow-1"
+                  :style="{ '--title-color': item.titleColor }"
+                >
+                  <div 
+                    class="user-label" 
+                    v-if="shouldShowUserLabel(item)"
+                    :style="{ 
+                      background: item.letterColor, 
+                      color: item.primaryColor 
+                    }"
+                  >
+                    {{ item.originalUserFullName }}
+                  </div>
+
+                  <div class="card-header">
+                    <div v-if="!item.reported" class="edit-btn" @click.stop="openEditDialog(item)">
+                      <v-icon>mdi-pencil</v-icon>
+                    </div>
+
+                    <div v-if="!item.reported" class="delete-btn" @click="deleteCard(item)">
+                      <v-icon>mdi-delete</v-icon>
+                    </div>
+
+                    <v-tooltip text="Tooltip" location="top"  v-if="item.reported && !shouldShowUserLabel(item)">
+                      <template v-slot:activator="{ props }">
+                        <div class="report-ok-btn">
+                          <v-icon v-bind="props">mdi-bookmark-check</v-icon>
+                        </div>
+                      </template>
+                      <span>Ya esta reportada a tu lider</span>
+                    </v-tooltip>
+
+                    <div class="date-badge">
+                      <span 
+                        class="month" 
+                        :style="{ 
+                          color: item.letterDateColor,
+                          textShadow: `
+                            0.05em 0.05em 0.1em ${getContrastShadow(item.primaryColorDate)},
+                            -0.05em -0.05em 0.1em ${getLightShadow(item.primaryColorDate)}
+                          `
+                        }"
+                      >
+                        {{ getSpanishMonth(item.monthCreated) }}
+                      </span>
+                      <span 
+                        class="day" 
+                        :style="{ 
+                          backgroundColor: item.primaryColorDate,
+                          color: item.letterDateColor
+                        }"
+                      >
+                        {{ item.dayCreated }}
+                      </span>
+                    </div>
+
+                    <v-btn 
+                        icon="mdi-star"
+                        variant="text"
+                        v-if="!shouldShowUserLabel(item)"
+                        class="favorite-icon"
+                        :color="item.favorite ? 'yellow' : 'grey'"
+                        @click="setFavorite(item.id); item.favorite = !item.favorite"
+                      >
+                      </v-btn>
+
+                  </div>
+
+                  <div class="card-content">
+                    <v-card-title class="card-title">
+                      <span 
+                        class="title-text" 
+                        :style="{ color: item.titleColor }"
+                      >
+                        {{ item.title }}
+                      </span>
+                    </v-card-title>
+
+                    <v-card-subtitle class="versicle">
+                      <v-icon small :color="item.titleColor">mdi-book-variant</v-icon>
+                      <span :style="{ color: item.letterColor }">
+                        {{ item.versicle }}
+                      </span>
+                    </v-card-subtitle>
+
+                    <v-card-text 
+                      class="content" 
+                      :style="{ color: item.letterColor }"
+                    >
+                      {{ item.content }}
+                    </v-card-text>
+                  </div>
+
+                  <div class="border-effect" :style="{ 
+                    background: `linear-gradient(45deg, ${item.titleColor} 30%, transparent)`
+                  }"></div>
+                </v-card>
+              </v-col>
+            </v-row>
+            </div>
+          </div>
+        </transition>
       </v-container>
     </v-card>
   </v-dialog>
@@ -230,7 +249,17 @@ export default {
       showCreateDialog: false,
       selectedCard: null,
       editMode: false,
+      currentPage: 0,
+      transitionName: 'slide-next'
     };
+  },
+  watch: {
+    groupedByMonth: {
+      handler() {
+        this.setCurrentMonthPage();
+      },
+      immediate: true
+    }
   },
   setup() {
     const { notify } = useNotification();
@@ -242,13 +271,30 @@ export default {
   methods: {
     ...mapActions(['logout']),
 
+    setCurrentMonthPage() {
+      const currentMonthName = new Date().toLocaleString('en-US', { month: 'long' });
+      console.log(currentMonthName);
+      console.log(this.groupedByMonth);
+      const currentIndex = this.groupedByMonth.findIndex(m => m.name === currentMonthName);
+      console.log(currentIndex);
+      this.currentPage = currentIndex >= 0 ? currentIndex : 0;
+    },
+
+    nextPage() {
+      this.transitionName = 'slide-next';
+      this.currentPage++;
+    },
+
+    prevPage() {
+      this.transitionName = 'slide-prev';
+      this.currentPage--;
+    },
+
     async generateMonthPDF(monthName) {
       try {
         const element = document.getElementById(`month-${monthName}`);
-        console.log(element);
         if (!element) return;
 
-        // Mostrar carga
         this.notify({
           title: 'Generando PDF',
           text: 'Por favor espere...',
@@ -462,33 +508,166 @@ export default {
 </script>
 
 <style scoped>
+.nav-btn {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1000;
+  width: 50px;
+  height: 50px;
+}
+
+.nav-btn.left {
+  left: 20px;
+}
+
+.nav-btn.right {
+  right: 20px;
+}
+
+.dialog-container {
+  min-height: 100vh;
+  position: relative;
+  padding: 0 80px; /* Espacio para los botones */
+}
+
+.month-section {
+  width: 100%;
+  min-height: calc(100vh - 100px);
+  background: white;
+  page-break-inside: avoid;
+}
+
+.month-header {
+  background: white;
+  position: sticky;
+  top: -4px;
+  z-index: 100;
+  padding-top: 0px;
+  margin-bottom: 10px;
+  padding-bottom: 0px;
+}
+
+.month-content {
+  gap: 0rem;
+  padding: 0 2rem;
+  min-height: calc(100vh - 200px);
+}
+
+.custom-card {
+  height: 100%;
+  min-height: 300px;
+  transition: transform 0.3s ease;
+  max-height: 400px;
+}
+
+.custom-card:hover {
+  transform: translateY(-5px);
+}
+
+.floating-add-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.floating-reported-btn {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  z-index: 1000;
+}
+
+.close-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1001;
+}
+
+.user-label {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: bold;
+}
+
+.date-badge {
+  position: absolute;
+  top: 14px;
+  left: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.border-effect {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+}
+
+.empty-month {
+  text-align: center;
+  padding: 40px 0;
+  color: #666;
+}
+
+.transition-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  perspective: 1500px;
+}
+
+.month-section {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+.slide-next-enter-active,
+.slide-next-leave-active {
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-next-enter-from {
+  transform: rotateY(90deg) translateZ(100px);
+  opacity: 0;
+}
+
+.slide-next-leave-to {
+  transform: rotateY(-90deg) translateZ(-100px);
+  opacity: 0;
+}
+
+.slide-prev-enter-active,
+.slide-prev-leave-active {
+  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-prev-enter-from {
+  transform: rotateY(-90deg) translateZ(-100px);
+  opacity: 0;
+}
+
+.slide-prev-leave-to {
+  transform: rotateY(90deg) translateZ(100px);
+  opacity: 0;
+}
 
 .favorite-icon {
   filter: drop-shadow(0 2px 2px rgba(0,0,0,0.2));
   position: absolute;
   left: 0px;
   top: 0px;
-}
-
-.month-section {
-  position: relative;
-  background: white;
-  margin-bottom: 2rem;
-  page-break-inside: avoid; /* Para mejor renderizado en PDF */
-}
-
-.pdf-btn {
-  position: relative;
-  z-index: 2;
-}
-
-/* Mejora la renderización para html2canvas */
-.custom-card {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-}
-
-.border-effect {
-  display: none; /* Opcional: si causa problemas en el PDF */
 }
 </style>
