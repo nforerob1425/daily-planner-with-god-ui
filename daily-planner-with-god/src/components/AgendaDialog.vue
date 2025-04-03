@@ -736,8 +736,8 @@ export default {
 
 .user-label {
   position: absolute;
-  top: 10px;
-  left: 10px;
+  top: 0px;
+  left: 52%;
   padding: 4px 8px;
   border-radius: 4px;
   font-size: 0.8rem;
