@@ -74,7 +74,7 @@
         <transition :name="transitionName" mode="out-in">
           <div 
             :key="currentPage" 
-            class="transition-wrapper"
+            class="transition-wrapper config-view"
           >
           <div 
             v-for="(month, index) in groupedByMonth" 
@@ -103,7 +103,7 @@
               </v-col>
             </v-row>
             
-            <v-row class="month-content pt-9 pb-5 sunken-card config-view">
+            <v-row class="month-content pt-9 pb-5 sunken-card config-view" :id="'month-' + month.name" >
               <v-col 
                 v-for="item in month.items" 
                 :key="item.id" 
@@ -513,8 +513,8 @@ export default {
   top: 50%;
   transform: translateY(-50%);
   z-index: 1000;
-  width: 50px;
-  height: 50px;
+  width: 40px;
+  height: 40px;
 }
 
 .nav-btn.left {
@@ -540,11 +540,8 @@ export default {
 
 .month-header {
   background: white;
-  position: sticky;
-  top: -4px;
-  z-index: 100;
+  position: initial;
   padding-top: 0px;
-  margin-bottom: 10px;
   padding-bottom: 0px;
 }
 
@@ -623,7 +620,7 @@ export default {
   position: relative;
   width: 100%;
   height: 100vh;
-  perspective: 1500px;
+  perspective: 1200px;
 }
 
 .month-section {
@@ -632,36 +629,53 @@ export default {
   height: 100%;
   backface-visibility: hidden;
   transform-style: preserve-3d;
+  transition: transform 0.3s ease;
+  transform-origin: center center;
 }
 
 .slide-next-enter-active,
 .slide-next-leave-active {
-  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .slide-next-enter-from {
-  transform: rotateY(90deg) translateZ(100px);
-  opacity: 0;
+  transform: rotateY(30deg) translateZ(50px) scale(0.95);
+  opacity: 0.8;
 }
 
 .slide-next-leave-to {
-  transform: rotateY(-90deg) translateZ(-100px);
-  opacity: 0;
+  transform: rotateY(-30deg) translateZ(-50px) scale(0.95);
+  opacity: 0.8;
 }
+
+.slide-next-enter-active .month-section,
+.slide-prev-enter-active .month-section {
+  animation: scaleUp 0.4s ease;
+}
+
 
 .slide-prev-enter-active,
 .slide-prev-leave-active {
-  transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
 }
 
 .slide-prev-enter-from {
-  transform: rotateY(-90deg) translateZ(-100px);
-  opacity: 0;
+  transform: rotateY(-30deg) translateZ(-50px) scale(0.95);
+  opacity: 0.8;
 }
 
 .slide-prev-leave-to {
-  transform: rotateY(90deg) translateZ(100px);
-  opacity: 0;
+  transform: rotateY(30deg) translateZ(50px) scale(0.95);
+  opacity: 0.8;
+}
+
+@keyframes scaleUp {
+  0% {
+    transform: scale(0.98);
+  }
+  100% {
+    transform: scale(1);
+  }
 }
 
 .favorite-icon {
