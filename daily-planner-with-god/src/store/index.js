@@ -59,17 +59,6 @@ export default createStore({
         commit('SET_ERROR', error.message);
       }
     },
-    async fetchDatos({ commit }) {
-      commit('SET_LOADING', true);
-      try {
-        const response = await api.get('/endpoint');
-        commit('SET_DATOS', response.data);
-      } catch (error) {
-        commit('SET_ERROR', error.message);
-      } finally {
-        commit('SET_LOADING', false);
-      }
-    },
     
     async login({ commit }, credentials) {
       commit('SET_LOADING', true);
@@ -84,9 +73,9 @@ export default createStore({
         
       } catch (error) {
         let errorMessage = 'Error de autenticación';
-        
+        console.log(error);
         if (error.response) {
-          if (error.response.status === 401) {
+          if (error.status === 401) {
             errorMessage = 'Credenciales inválidas';
           }
           errorMessage = error.response.data?.message || errorMessage;
@@ -109,23 +98,6 @@ export default createStore({
         document.cookie = 'Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
       }
     },
-
-    async togglePraying({ commit }, petition) {
-      try {
-        const newState = !petition.isPraying;
-        const response = await api.patch(`/api/petitions?petitionId=${petition.id}`);
-        
-        // Actualizar en el store
-        const updatedPetition = { ...petition, isPraying: newState };
-        commit('UPDATE_PETITION', updatedPetition);
-        
-        return response.data;
-      } catch (error) {
-        console.error('Error actualizando estado:', error);
-        throw error;
-      }
-    }
-
   },
   getters: {
     datos: (state) => state.datos,

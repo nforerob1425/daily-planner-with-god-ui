@@ -1,10 +1,10 @@
-``<template>
-  <v-container fluid class="fill-height d-flex align-center justify-center ">
+<template>
+  <v-container fluid class="fill-height d-flex align-center justify-center " v-if="dataLoaded">
     <v-card class="pa-5 mx-auto text-center sunken-card config-view">
       <v-card-text class="text-h6">
         <v-container>
           <!-- Libros Propios -->
-          <v-row v-if="processedOwnItems.length > 0">
+          <v-row v-if="processedOwnItems.length > 0 && this.user.permissions.includes('CSAG')">
             <v-col 
               v-for="item in processedOwnItems" 
               :key="item.id" 
@@ -14,7 +14,7 @@
               class="d-flex justify-center"
             >
               <div class="book-wrapper">
-                <div class="book-title">{{ item.title }}</div>
+                <div class="book-title"></div>
                 <div class="book-leaf"></div>
                 <div class="book-leaf"></div>
                 <div class="book-leaf"></div>
@@ -38,7 +38,7 @@
           </v-row>
 
           <!-- Libros Reportados -->
-          <v-row v-if="processedReportedItems.length > 0">
+          <v-row v-if="processedReportedItems.length > 0 && this.user.permissions.includes('CSAG')">
             <v-col cols="12">
               <h2 class="text-h5 font-weight-bold">Los R07's de tus ovejas</h2>
             </v-col>
@@ -97,12 +97,20 @@
       @refresh-notes="fetchNotes"
     />
   </v-container>
+  <v-progress-circular
+      v-else
+      indeterminate
+      color="primary"
+      size="64"
+      class="loading-spinner"
+    />
 </template>
 
 <script>
 import api from '@/plugins/axios';
 import { mapState, mapActions } from 'vuex';
 import AgendaDialog from '@/components/AgendaDialog.vue';
+import { useNotification } from "@kyvg/vue3-notification";
 
 const MONTHS_ORDER = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -116,6 +124,7 @@ export default {
   },
   data() {
     return {
+      dataLoaded: false,
       currentYear: new Date().getFullYear(),
       dialog: false,
       selectedAgendaId: null,
@@ -126,6 +135,10 @@ export default {
       data: [],
       notes: [],
     };
+  },
+  setup() {
+    const { notify } = useNotification();
+    return { notify };
   },
   computed: {
     ...mapState(['user']),
@@ -196,51 +209,116 @@ export default {
     async fetchItems() {
       try {
         const response = await api.get(`/api/Cards?userId=${this.user.id}`);
-        this.items = response.data?.data || [];
-        this.items.sort((a, b) => new Date(a.created) - new Date(b.created));
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al cargar las tarjetas.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.items = response.data?.data || [];
+          this.items.sort((a, b) => new Date(a.created) - new Date(b.created));
+        }
       } catch (error) {
-        console.error('Error fetching items:', error);
-        if (error.response.status === 401) {
+        if (error.status === 401) {
           this.logout();
         }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la peticion.',
+          type: 'error',
+          duration: 2000
+        });
       }
     },
     async fetchAgendas() {
       try {
         const response = await api.get(`/api/Agendas?isMale=${this.user.isMale}`);
-        this.data = response.data?.data || [];
-        await this.fetchItems();
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al cargar las agendas.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.data = response.data?.data || [];
+          await this.fetchItems();
+        }
       } catch (error) {
-        console.error('Error fetching agendas:', error);
-        if (error.response.status === 401) {
+        if (error.status === 401) {
           this.logout();
         }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la peticion.',
+          type: 'error',
+          duration: 2000
+        });
         
       }
     },
-    fetchColors() {
-      api.get('/api/ColorPaletts')
-        .then(response => {
+    async fetchColors() {
+      try{
+        const response = await api.get('/api/ColorPaletts');
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al cargar los colores.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
           this.colors = response.data?.data || [];
-        })
-        .catch(error => {
-          console.error('Error fetching colors:', error);
-          if (error.response.status === 401) {
-            this.logout();
-          }
+        }
+      }
+      catch(error){
+        if (error.status === 401) {
+          this.logout();
+        }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la peticion.',
+          type: 'error',
+          duration: 2000
         });
+      }
+      
     },
-    fetchNotes() {
-      api.get(`/api/Note?agendaId=${this.selectedAgendaId}`)
-        .then(response => {
+    async fetchNotes() {
+      try{
+        const response = await api.get(`/api/Note?agendaId=${this.selectedAgendaId}`);
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al cargar las notas.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else {
           this.notes = response.data?.data || [];
-        })
-        .catch(error => {
-          console.error('Error fetching notes:', error);
-          if (error.response.status === 401) {
-            this.logout();
-          }
+        }
+      }
+      catch(error){
+        if (error.status === 401) {
+          this.logout();
+        }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la peticion.',
+          type: 'error',
+          duration: 2000
         });
+      }
     },
     handleNewCard(newCard) {
       this.items.unshift(newCard);
@@ -279,10 +357,14 @@ export default {
       this.notes = this.notes.filter(n => n.id !== noteId);
     }
   },
-  mounted() {
-    this.fetchAgendas();
-    this.fetchColors();
+  async mounted() {
+    if(!this.user.permissions.includes('CSPV')){
+      this.logout();
+    }
+    await this.fetchAgendas();
+    await this.fetchColors();
     this.fullName = `${this.user?.firstName || ''} ${this.user?.lastName || ''}`.trim();
+    this.dataLoaded = true;
   }
 };
 </script>

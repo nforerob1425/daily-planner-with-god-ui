@@ -284,7 +284,8 @@
     <!-- Diálogo de Confirmación -->
     <delete-confirmation-dialog
       v-model:show="deleteDialog"
-      :user="selectedUser"
+      :entity="selectedUser"
+      :entity-name="'usuario'"
       @confirm="deleteUser"
     ></delete-confirmation-dialog>
 
@@ -303,7 +304,7 @@
     color="secondary"
     fab
     dark
-    position="right"
+    right
     class="floating-permission-btn"
     @click="permissionsDialog = true"
   >
@@ -351,6 +352,7 @@
                   @update:model-value="togglePermission(permission.id, $event)"
                   hide-details
                   :disabled="!selectedRole"
+                  :color="isPermissionEnabled(permission.id) ? 'light-green-darken-3' : 'blue-grey-darken-1'"
                 ></v-checkbox>
               </td>
             </tr>
@@ -599,6 +601,15 @@ export default {
     },
 
     selectUser(user) {
+      this.$nextTick(() => {
+        if (this.$refs.formCard?.$el) {
+          this.$refs.formCard.$el.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+
       this.isEditing = true;
       this.form = { 
         ...user, 

@@ -17,7 +17,7 @@
               <stat-card 
                 v-for="(stat, index) in userStats" 
                 :key="index"
-                class="animate__animated animate__fadeInUp"
+                class="animate__animated animate__fadeInUp stats-grid-hover"
                 :style="{ 'animation-delay': `${index * 0.1}s` }"
                 :icon="stat.icon"
                 :title="stat.title"
@@ -260,9 +260,10 @@
 
 <script>
 import api from '@/plugins/axios';
-import { mapActions } from 'vuex';
+import { mapActions, mapState } from 'vuex';
 import StatCard from '@/components/StatCard.vue';
 import ColorBox from '@/components/ColorBox.vue';
+import { useNotification } from "@kyvg/vue3-notification";
 
 export default {
   name: 'dashboard-view',
@@ -285,7 +286,12 @@ export default {
       }
     }
   },
+  setup() {
+    const { notify } = useNotification();
+    return { notify };
+  },
   computed: {
+    ...mapState(['user']),
     filteredCards() {
       return Object.entries(this.cards || {}).filter(([key]) => 
         !key.includes('Color') && 
@@ -308,7 +314,9 @@ export default {
         { icon: 'mdi-account-network', title: 'Coordinadores', value: this.users.networkCoordinators, color: 'purple' },
         { icon: 'mdi-account-star', title: 'Líderes Red', value: this.users.networkLeaders, color: 'teal' },
         { icon: 'mdi-account-tie', title: 'Cabezas Red', value: this.users.networkHeaders, color: 'pink' },
-        { icon: 'mdi-account-hard-hat', title: 'Pastores', value: this.users.pastors, color: 'deep-orange' }
+        { icon: 'mdi-account-hard-hat', title: 'Pastores', value: this.users.pastors, color: 'deep-orange' },
+        { icon: 'mdi-glasses', title: 'Moderadores', value: this.roles.totalModeratorUsers, color: 'blue' },
+        { icon: 'mdi-shield', title: 'Administradores', value: this.roles.totalAdminUsers, color: 'red' }
       ]
     },
     roleMetrics() {
@@ -322,13 +330,13 @@ export default {
       const totalUsers = this.users.totalUsers || 1
       return [
         (this.users.sheeps / totalUsers * 100).toFixed(1),
-        (this.users.leaders / totalUsers * 100).toFixed(1),
         (this.users.networkCoordinators / totalUsers * 100).toFixed(1),
-        (this.users.networkLeaders / totalUsers * 100).toFixed(1),
-        (this.users.networkHeaders / totalUsers * 100).toFixed(1),
-        (this.users.pastors / totalUsers * 100).toFixed(1),
-        (this.roles.totalModeratorUsers / totalUsers * 100).toFixed(1),
         (this.roles.totalAdminUsers / totalUsers * 100).toFixed(1),
+        (this.roles.totalModeratorUsers / totalUsers * 100).toFixed(1),
+        (this.users.pastors / totalUsers * 100).toFixed(1),
+        (this.users.networkLeaders / totalUsers * 100).toFixed(1),
+        (this.users.leaders / totalUsers * 100).toFixed(1),
+        (this.users.networkHeaders / totalUsers * 100).toFixed(1),
       ]
     },
     filteredPetitionTypes() {
@@ -351,10 +359,10 @@ export default {
         'mdi-account-network',
         'mdi-shield',
         'mdi-glasses',
-        'mdi-church',
+        'mdi-account-hard-hat',
         'mdi-account-star',
         'mdi-account-cowboy-hat',
-        'mdi-account-group'
+        'mdi-account-tie'
       ]
     }
   },
@@ -366,16 +374,37 @@ export default {
     async fetchItems() {
       try {
         const response = await api.get('/api/Dashboard');
-        this.dashboardData = response.data?.data || [];
-        this.dataLoaded = true;
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al cargar la data para las graficas.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.dashboardData = response.data?.data || [];
+        }
       } catch (error) {
-        console.error('Error fetching items:', error);
-        if (error.response?.status === 401) this.logout();
+        if (error.status === 401) {
+          this.logout();
+        }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la peticion.',
+          type: 'error',
+          duration: 2000
+        });
       }
     }
   },
-  mounted() {
-    this.fetchItems();
+  async mounted() {
+    if(!this.user.permissions.includes('CSDV')){
+      this.logout();
+    }
+    await this.fetchItems();
+    this.dataLoaded = true;
   }
 };
 </script>
@@ -447,6 +476,12 @@ export default {
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1.5rem;
   padding: 1rem;
+}
+
+.stats-grid-hover:hover {
+  background: rgba(33, 150, 243, 0.05) !important;
+  transform: translateX(10px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 .list-item-hover {

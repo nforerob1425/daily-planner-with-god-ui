@@ -11,22 +11,23 @@
       </v-card-title>
 
       <v-card-text class="pa-6">
-        <div v-if="user" class="text-body-1">
-          ¿Estás seguro que deseas eliminar al usuario:
-          <span class="font-weight-bold">{{ user.firstName }} {{ user.lastName }}</span>?
-        </div>
-        <div v-else class="text-body-1">
+        <div class="text-body-1">
           ¿Estás seguro que deseas realizar esta eliminación?
         </div>
 
         <v-alert
-          v-if="user"
+          v-if="entity"
           type="warning"
           variant="tonal"
           class="mt-4"
           icon="mdi-alert"
         >
-          Esta acción eliminará permanentemente todos los datos asociados al usuario.
+          <span v-if="entityName == 'usuario'">
+            Esta acción eliminará permanentemente <b>TODOS</b> los datos asociados al usuario (Tarjetas, Notas, Anuncios).
+          </span>
+          <span v-else>
+            Esta accion eliminará permanentemente los datos {{ this.entityName }}.
+          </span>
         </v-alert>
       </v-card-text>
 
@@ -59,10 +60,14 @@ export default {
       type: Boolean,
       default: false
     },
-    user: {
+    entity: {
       type: Object,
       default: null
-    }
+    },
+    entityName: {
+      type: String,
+      default: ''
+    },
   },
   
   emits: ['update:show', 'confirm'],

@@ -153,7 +153,7 @@ export default {
         
         this.$router.push('/');
       } catch (error) {
-        if (error.response?.status === 401) {
+        if (error.status === 401) {
           this.authError = true;
           this.showError = true;
           this.$refs.loginForm.validate();

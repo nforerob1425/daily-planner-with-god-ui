@@ -1,5 +1,5 @@
 <template>
-  <v-container class="fill-height config-view" fluid>
+  <v-container v-if="dataLoaded" class="fill-height config-view" fluid>
     <v-row justify="center" class="ma-4">
       <v-col cols="12" md="10" lg="8">
         <h1 class="text-h3 mb-6 pb-6 gradient-text">Configuración de Visualización</h1>
@@ -69,18 +69,31 @@
       </v-col>
     </v-row>
   </v-container>
+  <v-progress-circular
+      v-else
+      indeterminate
+      color="primary"
+      size="64"
+      class="loading-spinner"
+    />
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapActions, mapState } from 'vuex'
 import api from '@/plugins/axios';
+import { useNotification } from "@kyvg/vue3-notification";
 
 export default {
   name: 'configuration-view',
   data(){
     return{
-      configurations: []
+      configurations: [],
+      dataLoaded: false,
     }
+  },
+  setup() {
+    const { notify } = useNotification();
+    return { notify };
   },
   computed: {
     ...mapState(['user']),
@@ -89,18 +102,40 @@ export default {
     },
   },
   methods: {
+    ...mapActions(['logout']),
     async fetchConfigurations() {
       try {
         const response = await api.get(`/api/Configurations`);
-        this.configurations = response.data?.data || [];
-      } catch (error) {
-        console.error('Error fetching items:', error);
-        if (error.response.status === 401) {
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al cargar las configuraciones.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.configurations = response.data?.data || [];
+          this.dataLoaded = true;
+        }
+      } 
+      catch (error) {
+        if (error.status === 401) {
           this.logout();
         }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la peticion.',
+          type: 'error',
+          duration: 2000
+        });
       }
     },
+
     async selectConfiguration(config) {
+      if(!this.user.permissions.includes('CUUS')) return;
+
       try {
         const newConfig = {
           configurationId: config.id,
@@ -116,11 +151,23 @@ export default {
         
         await this.$store.dispatch('updateUserConfiguration', { newConfig, payload });
         
+        this.notify({
+            title: 'Éxito',
+            text: 'Configuracion del usuario actualizada correctamente.',
+            type: 'success',
+            duration: 2000
+          });
+
       } catch (error) {
-        console.log('Error updating configuration:', error);
-        if (error.response.status === 401) {
+        if (error.status === 401) {
           this.logout();
         }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la peticion.',
+          type: 'error',
+          duration: 2000
+        });
       }
     },
     cardStyle(config) {
@@ -141,6 +188,9 @@ export default {
     }
   },
   mounted() {
+    if(!this.user.permissions.includes('CSCV')){
+      this.logout();
+    }
     this.fetchConfigurations();
   }
 }
@@ -151,6 +201,7 @@ export default {
 .gradient-text {
   background: linear-gradient(45deg, #1e3c72, #2a5298);
   -webkit-background-clip: text;
+  background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }

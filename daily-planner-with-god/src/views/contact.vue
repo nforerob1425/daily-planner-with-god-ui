@@ -1,5 +1,5 @@
 <template>
-  <v-container class="contact-container config-view">
+  <v-container class="contact-container config-view" v-if="dataLoaded">
     <v-slide-y-transition>
       <v-card class="contact-card" elevation="24">
         <div class="card-background"></div>
@@ -9,7 +9,7 @@
           <span class="font-weight-bold">Envíanos tu solicitud</span>
         </v-card-title>
 
-        <v-form @submit.prevent="sendEmail" class="pa-8">
+        <v-form @submit.prevent="sendEmail" class="pa-8" ref="formRef">
           <v-text-field
             v-model="formData.name"
             label="Tu nombre"
@@ -17,20 +17,6 @@
             color="blue-lighten-3"
             variant="outlined"
             :rules="[v => !!v || 'El nombre es requerido']"
-            class="animate-field"
-          ></v-text-field>
-
-          <v-text-field
-            v-model="formData.email"
-            label="Tu correo"
-            type="email"
-            prepend-icon="mdi-at"
-            color="blue-lighten-3"
-            variant="outlined"
-            :rules="[
-              v => !!v || 'El correo es requerido',
-              v => /.+@.+\..+/.test(v) || 'Correo inválido'
-            ]"
             class="animate-field"
           ></v-text-field>
 
@@ -75,62 +61,118 @@
         </v-form>
       </v-card>
     </v-slide-y-transition>
-
-    <v-snackbar v-model="snackbar" :timeout="3000" color="green-darken-1" top>
-      <v-icon left>mdi-information</v-icon>
-      {{ snackbarText }}
-    </v-snackbar>
   </v-container>
+  <v-progress-circular
+      v-else
+      indeterminate
+      color="primary"
+      size="64"
+      class="loading-spinner"
+    />
 </template>
 
 <script>
+import api from '@/plugins/axios';
+import { mapActions, mapState } from 'vuex';
+import { useNotification } from "@kyvg/vue3-notification";
+
 export default {
   name: 'contact-view',
   data: () => ({
+    dataLoaded: false,
+    emailDestination: '',
+    appConfigs:[],
     formData: {
       name: '',
-      email: '',
       subject: '',
       message: ''
     },
-    snackbar: false,
-    snackbarText: ''
   }),
+  setup() {
+    const { notify } = useNotification();
+    return { notify };
+  },
   computed: {
+    ...mapState(['user']),
     formValid() {
       return (
         this.formData.name &&
-        this.formData.email &&
-        /.+@.+\..+/.test(this.formData.email) &&
         this.formData.subject &&
         this.formData.message
       )
     }
   },
   methods: {
-    sendEmail() {
-      const destinatario = 'tuemail@ejemplo.com'
+    ...mapActions(['logout']),
+    async sendEmail() {
+      const { valid } = await this.$refs.formRef.validate();
+      if (!valid) return; 
+
+      const destinatario = this.emailDestination;
       const asunto = encodeURIComponent(this.formData.subject)
       const cuerpo = encodeURIComponent(
-        `Nombre: ${this.formData.name}\nEmail: ${this.formData.email}\n\nMensaje:\n${this.formData.message}`
+        `Buen día,\n Mi nombre es: ${this.formData.name}\n Mi solicitud es:\n\n${this.formData.message}`
       )
 
       const mailtoLink = `mailto:${destinatario}?subject=${asunto}&body=${cuerpo}`
       
       window.open(mailtoLink, '_blank', 'noopener,noreferrer')
-      this.snackbarText = 'Cliente de correo abierto correctamente'
-      this.snackbar = true
-      this.resetForm()
+      this.notify({
+          title: 'Éxito',
+          text: 'Cliente de correo abierto correctamente.',
+          type: 'success',
+          duration: 2000
+        });
+      this.resetForm();
       
     },
+
     resetForm() {
+      this.$refs.formRef.reset();
+      this.$refs.formRef.resetValidation();
       this.formData = {
         name: '',
-        email: '',
         subject: '',
         message: ''
+      };
+    },
+    async fetchConfigs() {
+      try {
+        const response = await api.get('/api/AppAdministration/appConfigs');
+
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al cargar las configuraciones del sistema.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.appConfigs = response.data?.data || [];
+          const result = this.appConfigs.find(item => item.name === "SupportEmail");
+          this.emailDestination = result?.value
+        }
+      } catch (error) {
+        if (error.status === 401) {
+          this.logout();
+        }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la peticion.',
+          type: 'error',
+          duration: 2000
+        });
       }
+    },
+  },
+  async mounted() {
+    if(!this.user.permissions.includes('CSEV')){
+      this.logout();
     }
+    await this.fetchConfigs();
+    this.dataLoaded = true;
   }
 }
 </script>

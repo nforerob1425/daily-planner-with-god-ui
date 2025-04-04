@@ -1,11 +1,12 @@
 <template>
-  <v-container fluid class="main-container config-view">
+  <v-container fluid class="main-container config-view"  v-if="dataLoaded">
     <v-row>
       <v-col>
-        <v-card class="glass-card pa-6">
+        <v-card class="glass-card pa-6" v-if="this.user.permissions.includes('CSNW')">
           <div class="d-flex justify-space-between align-center mb-6">
             <h2 class="text-h3 gradient-text">Anuncios</h2>
             <v-btn 
+              v-if="this.user.permissions.includes('CCNW')"
               icon
               color="primary" 
               class="animated-btn"
@@ -28,10 +29,10 @@
                 <v-card-title class="d-flex justify-space-between align-center">
                   <span class="text-h5">{{ ad.title }}</span>
                   <div>
-                    <v-btn icon @click="openEditor(ad)" class="mr-2">
+                    <v-btn icon @click="openEditor(ad)" class="mr-2" v-if="this.user.permissions.includes('CUNW') && ad.userCreatedId === this.user.id">
                       <v-icon color="primary">mdi-pencil</v-icon>
                     </v-btn>
-                    <v-btn icon @click="deleteAd(ad.id)">
+                    <v-btn icon @click="confirmDeleteAd(ad)" v-if="this.user.permissions.includes('CDNW') && ad.userCreatedId === this.user.id">
                       <v-icon color="error">mdi-delete</v-icon>
                     </v-btn>
                   </div>
@@ -62,7 +63,8 @@
               ></iframe>
             </div>
 
-            <div class="book-wrapper mt-4 mb-4" @click="this.$router.push({ path: '/planner', query: { redirected: true } });">
+            <div class="book-wrapper mt-4 mb-4" @click="this.$router.push({ path: '/planner', query: { redirected: true } });" v-if="this.user.permissions.includes('CSPV')">
+              <div class="book-title"></div>
               <div class="book-leaf"></div>
               <div class="book-leaf"></div>
               <div class="book-leaf"></div>
@@ -83,7 +85,6 @@
       </v-col>
     </v-row>
 
-    <!-- Diálogo de edición -->
     <v-dialog v-model="dialog" max-width="800" transition="slide-y-transition">
       <v-card class="glass-dialog">
         <div class="dialog-header">
@@ -168,7 +169,7 @@
                         label="Fecha de fin"
                         readonly
                         v-bind="props"
-                        :rules="[v => !!v || 'Campo requerido']"
+                        :rules="[v => !!v || 'Campo requerido', validateEndDate]"
                         outlined
                         color="primary"
                         class="input-glass"
@@ -211,15 +212,33 @@
         </v-card-text>
       </v-card>
     </v-dialog>
+
+    <delete-confirmation-dialog
+      v-model:show="deleteAdDialog"
+      :entity="selectedAd"
+      :entity-name="'del anuncio'"
+      @confirm="deleteAd(selectedAd.id)"
+    ></delete-confirmation-dialog>
   </v-container>
+
+  <v-progress-circular
+      v-else
+      indeterminate
+      color="primary"
+      size="64"
+      class="loading-spinner"
+    />
 </template>
 
 <script>
 import api from '@/plugins/axios';
-import { mapActions } from 'vuex';
+import { mapActions, mapState } from 'vuex';
+import { useNotification } from "@kyvg/vue3-notification";
+import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog.vue';
 
 export default {
   name: 'home-view',
+  components: { DeleteConfirmationDialog },
   data() {
     return {
       ads: [],
@@ -230,6 +249,9 @@ export default {
       endDateMenu: false,
       loading: false,
       youtubeLink: '',
+      dataLoaded: false,
+      deleteAdDialog: false,
+      selectedAd: null,
       formData: {
         title: '',
         content: '',
@@ -239,7 +261,12 @@ export default {
       }
     }
   },
+  setup() {
+    const { notify } = useNotification();
+    return { notify };
+  },
   computed: {
+    ...mapState(['user']),
     safeYouTubeUrl() {
       if (this.isPlaylist) {
         return `https://www.youtube-nocookie.com/embed/videoseries?list=${this.playlistId}`;
@@ -268,7 +295,24 @@ export default {
   },
   methods: {
     ...mapActions(['logout']),
-    
+    confirmDeleteAd(Ad){
+      this.selectedAd = Ad;
+      this.deleteAdDialog = true;
+    },
+
+    validateEndDate(){
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const minDate = new Date(today);
+
+      if (!this.formData.endDate) return 'Campo requerido';
+
+      const selectedDate = new Date(this.formData.endDate);
+      selectedDate.setHours(0, 0, 0, 0);
+
+      return selectedDate > minDate || 'Debe ser al menos 1 día después de hoy';
+    },
+
     formatDate(dateString) {
       const options = { year: 'numeric', month: 'long', day: 'numeric' };
       return new Date(dateString).toLocaleDateString('es-ES', options);
@@ -309,17 +353,40 @@ export default {
 
     async fetchAds() {
       try {
-        const { data } = await api.get('/api/Ads');
-        this.ads = data?.data || [];
-      } catch (error) {
-        console.error('Error fetching ads:', error);
-        alert('Error al cargar las noticias');
+        const response = await api.get('/api/Ads');
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al cargar los anuncios.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.ads = response.data?.data || [];
+        }
+      } 
+      catch (error) {
+        if (error.status === 401) {
+          this.logout();
+        }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la peticion.',
+          type: 'error',
+          duration: 2000
+        });
       }
     },
 
     async saveAd() {
       this.loading = true;
-      if (!this.$refs.form.validate()) return;
+      const { valid } = await this.$refs.form.validate();
+      if (!valid){ 
+        this.loading = false;
+        return; 
+      }
 
       try {
         const payload = {
@@ -328,10 +395,46 @@ export default {
           endDate: this.formData.endDate.toISOString()
         };
 
+        let response = '';
         if (this.editingAd) {
-          await api.put(`/api/Ads/${this.editingAd.id}`, payload);
+          response = await api.put(`/api/Ads/${this.editingAd.id}`, payload);
+          if(!response.data.success) {
+            this.notify({
+              title: 'Error',
+              text: 'Error al editar el anuncio.',
+              type: 'error',
+              duration: 2000
+            });
+            console.error(response.data?.message);
+          }
+          else{
+            this.notify({
+              title: 'Éxito',
+              text: 'Anuncio actualizado correctamente.',
+              type: 'success',
+              duration: 2000
+            });
+          }
+
         } else {
-          await api.post('/api/Ads', payload);
+          response = await api.post('/api/Ads', payload);
+          if(!response.data.success) {
+            this.notify({
+              title: 'Error',
+              text: 'Error al crear el anuncio.',
+              type: 'error',
+              duration: 2000
+            });
+            console.error(response.data?.message);
+          }
+          else{
+            this.notify({
+              title: 'Éxito',
+              text: 'Anuncio creado correctamente.',
+              type: 'success',
+              duration: 2000
+            });
+          }
         }
         
         this.fetchAds();
@@ -345,31 +448,75 @@ export default {
     },
 
     async deleteAd(id) {
-      if (!confirm('¿Estás seguro de eliminar esta noticia?')) return;
-      
       try {
-        await api.delete(`/api/Ads/${id}`);
+        const response = await api.delete(`/api/Ads/${id}`);
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al eliminar el anuncio.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.notify({
+            title: 'Éxito',
+            text: 'Anuncio eliminado correctamente.',
+            type: 'success',
+            duration: 2000
+          });
+        }
         this.fetchAds();
       } catch (error) {
-        console.error('Error deleting ad:', error);
-        alert('Error al eliminar la noticia');
+        if (error.status === 401) {
+          this.logout();
+        }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la peticion.',
+          type: 'error',
+          duration: 2000
+        });
       }
     },
     async fetchConfigs() {
       try {
         const response = await api.get('/api/AppAdministration/appConfigs');
-        this.appConfigs = response.data?.data || [];
-        const result = this.appConfigs.find(item => item.name === "HomeVideoUrl");
-        this.youtubeLink = result?.value
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al cargar las configuraciones del sistema.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.appConfigs = response.data?.data || [];
+          const result = this.appConfigs.find(item => item.name === "HomeVideoUrl");
+          this.youtubeLink = result?.value
+        }
       } catch (error) {
-        console.error('Error fetching app configs:', error);
-        alert('Error al eliminar la noticia');
+        if (error.status === 401) {
+          this.logout();
+        }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la peticion.',
+          type: 'error',
+          duration: 2000
+        });
       }
     },
   },
-  mounted() {
-    this.fetchAds();
-    this.fetchConfigs();
+  async mounted() {
+    if(!this.user.permissions.includes('CSHV')){
+      this.logout();
+    }
+    await this.fetchAds();
+    await this.fetchConfigs();
+    this.dataLoaded = true;
   }
 };
 </script>
@@ -693,7 +840,6 @@ export default {
 
 .glass-dialog {
   background: rgba(255, 255, 255, 0.9) !important;
-  backdrop-filter: blur(20px);
   border-radius: 24px !important;
   border: 1px solid rgba(255, 255, 255, 0.3) !important;
   box-shadow: 
@@ -746,7 +892,6 @@ export default {
 
 .glass-date-picker {
   background: rgba(255, 255, 255, 0.8) !important;
-  backdrop-filter: blur(10px);
   border-radius: 16px !important;
 }
 

@@ -1,19 +1,18 @@
 <template>
-  <v-container class="fill-height config-view" fluid>
+  <v-container class="fill-height config-view" fluid v-if="dataLoaded">
     <v-card class="pa-6 main-card" elevation="12">
-      <!-- Encabezado con gradiente -->
       <div class="header-gradient py-4 rounded-t-lg mb-6">
         <h1 class="text-h3 font-weight-bold white-text slide-in pl-2 pr-2">
           <v-icon color="white" class="mr-3">mdi-clipboard-text</v-icon>
-           Peticiones de Oración
+           Tus peticiones de Oración
         </h1>
       </div>
 
       <!-- Sección de peticiones activas -->
-      <section v-if="activePetitions.length > 0" class="mb-8">
+      <section v-if="activePetitions.length > 0 && this.user.permissions.includes('CSPT')" class="mb-8">
         <h2 class="text-h5 primary--text mb-4 slide-in">
           <v-icon color="cyan" class="mr-2">mdi-hand-heart</v-icon>
-          Peticiones Activas ({{ activePetitions.length }})
+          Peticiones actualmente en oración ({{ activePetitions.length }})
         </h2>
         <v-slide-y-transition group>
           <v-card
@@ -46,10 +45,10 @@
       </section>
 
       <!-- Sección de peticiones inactivas -->
-      <section v-if="inactivePetitions.length > 0">
+      <section v-if="inactivePetitions.length > 0 && this.user.permissions.includes('CSPT')">
         <h2 class="text-h5 grey--text mb-4 slide-in">
           <v-icon color="blue" class="mr-2">mdi-sleep</v-icon>
-          Peticiones Pendientes ({{ inactivePetitions.length }})
+          Peticiones solicitadas/cumplidas ({{ inactivePetitions.length }})
         </h2>
         <v-slide-y-transition group>
           <v-card
@@ -70,6 +69,7 @@
 
               <template v-slot:append>
                 <v-btn
+                  v-if="this.user.permissions.includes('CDPT')"
                   icon
                   @click="confirmDelete(petition)"
                   class="floating"
@@ -94,7 +94,7 @@
       </section>
 
       <!-- Botón flotante de creación -->
-      <v-tooltip text="Pidele ayuda a tu lider para orar" location="left" v-if="this.user.hasLead">
+      <v-tooltip text="Pidele ayuda a tu lider para orar" location="left" v-if="this.user.hasLead && this.user.permissions.includes('CCPT')">
         <template v-slot:activator="{ props }">
           <v-btn 
             v-bind="props"
@@ -168,40 +168,37 @@
         </v-card>
       </v-dialog>
 
-      <!-- Diálogo de confirmación -->
-      <v-dialog v-model="showDeleteDialog" max-width="400">
-        <v-card rounded="lg">
-          <div class="header-gradient py-4 rounded-t-lg">
-            <v-card-title class="white-text">
-              <v-icon color="white" class="mr-2">mdi-alert-circle</v-icon>
-              Confirmar Eliminación
-            </v-card-title>
-          </div>
-          <v-card-text class="pt-4">
-            ¿Seguro que deseas eliminar esta petición?
-          </v-card-text>
-          <v-card-actions class="pa-4">
-            <v-btn @click="showDeleteDialog = false" class="mr-2">Cancelar</v-btn>
-            <v-btn color="error" @click="deletePetition" class="elevation-2 pulse">
-              <v-icon left>mdi-delete</v-icon>
-              Eliminar
-            </v-btn>
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
+      <delete-confirmation-dialog
+        v-model:show="showDeleteDialog"
+        :entity="selectedPetition"
+        :entity-name="'de la petición'"
+        @confirm="deletePetition()"
+      ></delete-confirmation-dialog>
     </v-card>
   </v-container>
+
+  <v-progress-circular
+      v-else
+      indeterminate
+      color="primary"
+      size="64"
+      class="loading-spinner"
+    />
 </template>
 
 <script>
 import { mapState, mapActions } from 'vuex';
 import api from '@/plugins/axios';
+import { useNotification } from "@kyvg/vue3-notification";
+import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog.vue';
 
 export default {
   name: 'petitions-view',
+  components: { DeleteConfirmationDialog },
   data: () => ({
     petitions: [],
     petitionTypes: [],
+    dataLoaded: false,
     newPetition: {
       prayFor: '',
       content: '',
@@ -212,6 +209,10 @@ export default {
     showDeleteDialog: false,
     selectedPetition: null
   }),
+  setup() {
+    const { notify } = useNotification();
+    return { notify };
+  },
   computed: {
     ...mapState(['user']),
     sortedPetitions() {
@@ -231,28 +232,60 @@ export default {
       )
     }
   },
-  async created() {
-    await this.fetchPetitions()
-    await this.fetchPetitionTypes()
-  },
   methods: {
     ...mapActions(['logout']),
     async fetchPetitions() {
       try {
         const response = await api.get(`/api/petitions?userId=${this.user.id}`)
-        this.petitions = response.data?.data || []
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al cargar las peticiones.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.petitions = response.data?.data || [];
+        }
       } catch (error) {
-        console.error('Error fetching petitions:', error)
-        if (error.response?.status === 401) this.logout()
+        if (error.status === 401) {
+          this.logout();
+        }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la petición.',
+          type: 'error',
+          duration: 2000
+        });
       }
     },
     async fetchPetitionTypes() {
       try {
         const response = await api.get('/api/petitiontypes')
-        this.petitionTypes = response.data?.data || []
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al cargar los tipos de peticiones.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.petitionTypes = response.data?.data || [];
+        }
       } catch (error) {
-        console.error('Error fetching petition types:', error)
-        if (error.response?.status === 401) this.logout()
+        if (error.status === 401) {
+          this.logout();
+        }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la petición.',
+          type: 'error',
+          duration: 2000
+        });
       }
     },
     getColorIcon(petition) {
@@ -278,11 +311,35 @@ export default {
     },
     async deletePetition() {
       try {
-        await api.delete(`/api/petitions/${this.selectedPetition.id}`)
-        this.petitions = this.petitions.filter(p => p.id !== this.selectedPetition.id)
+        const response = await api.delete(`/api/petitions/${this.selectedPetition.id}`)
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al eliminar la petición.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.notify({
+            title: 'Éxito',
+            text: 'Petición eliminada correctamente.',
+            type: 'success',
+            duration: 2000
+          });
+          this.petitions = this.petitions.filter(p => p.id !== this.selectedPetition.id)
+        }
       } catch (error) {
-        console.error('Error deleting petition:', error)
-        if (error.response?.status === 401) this.logout()
+        if (error.status === 401) {
+          this.logout();
+        }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la petición.',
+          type: 'error',
+          duration: 2000
+        });
       }
       this.showDeleteDialog = false
     },
@@ -297,12 +354,37 @@ export default {
           createdDate: now.toISOString()
         }
         const response = await api.post('/api/petitions', newPetition)
-        this.petitions.unshift(response.data?.data)
-        this.showDialog = false
-        this.resetForm()
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al cargar.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.notify({
+            title: 'Éxito',
+            text: 'Petición creada correctamente.',
+            type: 'success',
+            duration: 2000
+          });
+          
+          this.petitions.unshift(response.data?.data)
+          this.showDialog = false
+          this.resetForm()
+        }
       } catch (error) {
-        console.error('Error creating petition:', error)
-        if (error.response?.status === 401) this.logout()
+        if (error.status === 401) {
+          this.logout();
+        }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la petición.',
+          type: 'error',
+          duration: 2000
+        });
       }
     },
     resetForm() {
@@ -313,18 +395,17 @@ export default {
         petitionTypeId: null
       }
     },
-    async togglePraying(petition) {
-      try {
-        const newState = !petition.isPraying
-        await api.patch(`/api/petitions/${petition.id}`, { isPraying: newState })
-        petition.isPraying = newState
-      } catch (error) {
-        console.error('Error updating prayer status:', error)
-        if (error.response?.status === 401) this.logout()
-        petition.isPraying = !petition.isPraying
-      }
+  },
+  async mounted() {
+    if(!this.user.permissions.includes('CSPTV')){
+      this.logout();
     }
+    await this.fetchPetitions()
+    await this.fetchPetitionTypes()
+
+    this.dataLoaded = true;
   }
+
 }
 </script>
 

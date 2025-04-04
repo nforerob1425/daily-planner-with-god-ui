@@ -1,14 +1,11 @@
 <template>
-  <v-container fluid class="app-container config-view">
-    <!-- Título principal con gradiente -->
-    <h1 class="text-gradient mb-8 animate__animated animate__fadeInDown">Administración de la Aplicación</h1>
-
-    <!-- Sección de Agendas mejorada -->
+  <v-container fluid class="app-container config-view" v-if="dataLoaded">
     <v-card class="mb-8 animate__animated animate__fadeIn">
       <v-card-title class="card-header">
         <v-icon large color="white" class="mr-2">mdi-notebook-multiple</v-icon>
         Gestión de Agendas
         <v-btn 
+          v-if="this.user.permissions.includes('CCAG')"
           color="secondary" 
           @click="openAgendaDialog(null)"
           class="btn-add ml-5"
@@ -18,13 +15,13 @@
         </v-btn>
       </v-card-title>
       
-      <v-list class="agenda-list" lines="two">
+      <v-list class="agenda-list" lines="two" v-if="this.user.permissions.includes('CSAG')">
         <transition-group name="list">
           <v-list-item 
             v-for="agenda in agendas" 
-            :key="agenda.id" 
-            @click="openAgendaDialog(agenda)"
+            :key="agenda.id"
             class="list-item-hover"
+            @click="openAgendaDialog(agenda)"
           >
             <template #prepend>
               <v-icon class="icon-agenda">mdi-notebook</v-icon>
@@ -41,11 +38,12 @@
               </v-icon>
             </v-list-item-title>
             <v-list-item-subtitle class="agenda-content">{{ agenda.content }}</v-list-item-subtitle>
+            
             <template #append>
               <v-btn 
+                v-if="this.user.permissions.includes('CDAG')"
                 icon 
-                @click.stop="deleteAgenda(agenda.id)"
-                class="btn-delete"
+                @click.stop="confirmDeleteAgenda(agenda)"
               >
                 <v-icon color="error">mdi-delete</v-icon>
               </v-btn>
@@ -56,7 +54,7 @@
     </v-card>
 
     <!-- Sección de Colores -->
-    <v-row class="color-section mb-8">
+    <v-row class="color-section mb-8" v-if="this.user.permissions.includes('CSCO','CSTC')">
       <v-col 
         cols="12" 
         md="6" 
@@ -71,6 +69,7 @@
             {{ type.name }}
             <v-btn 
               icon 
+              v-if="this.user.permissions.includes('CCCO')"
               @click="openColorDialog(type)" 
               size="small"
               class="btn-add-color ml-2"
@@ -93,10 +92,11 @@
                 class="elevation-2 cursor-pointer color-square"
               ></v-sheet>
               <v-btn 
+                v-if="this.user.permissions.includes('CDCO')"
                 icon 
                 size="x-small" 
                 class="delete-btn"
-                @click.stop="deleteColor(color.id)"
+                @click.stop="confirmDeleteColor(color)"
               >
                 <v-icon color="error">mdi-close</v-icon>
               </v-btn>
@@ -110,7 +110,7 @@
         class="animate__animated animate__fadeInUp">
 
         <!-- Sección de Configuraciones -->
-        <v-card class="color-card" elevation="4">
+        <v-card class="color-card" elevation="4" v-if="this.user.permissions.includes('CSAP')">
           <v-card-title class="card-header">
             <v-icon large color="white" class="mr-2">mdi-cog-outline</v-icon>
             Configuraciones Generales
@@ -135,6 +135,7 @@
 
                 <template #append>
                   <v-btn 
+                    v-if="this.user.permissions.includes('CUAP')"
                     icon 
                     @click.stop="openConfigDialog(config)"
                     class="btn-edit"
@@ -148,7 +149,7 @@
         </v-card>
       </v-col>
     </v-row>
-    <!-- Diálogo para Agenda -->
+
     <v-dialog v-model="agendaDialog" max-width="600">
       <v-card class="dialog-card">
         <v-card-title class="dialog-header">
@@ -224,6 +225,7 @@
           </v-btn>
           <v-spacer></v-spacer>
           <v-btn 
+            v-if="isEditAgenda ? this.user.permissions.includes('CUAG') : this.user.permissions.includes('CCAG')"
             color="primary" 
             @click="saveAgenda"
             variant="flat"
@@ -235,7 +237,6 @@
       </v-card>
     </v-dialog>
 
-    <!-- Diálogo para Color -->
     <v-dialog v-model="colorDialog" max-width="400">
       <v-card class="dialog-card">
         <v-card-title class="dialog-header">
@@ -274,6 +275,7 @@
           </v-btn>
           <v-spacer></v-spacer>
           <v-btn 
+            v-if="isEditColor ? this.user.permissions.includes('CUCO') : this.user.permissions.includes('CCCO')"
             color="primary" 
             @click="saveColor"
             variant="flat"
@@ -285,7 +287,6 @@
       </v-card>
     </v-dialog>
 
-    <!-- Diálogo para Configuración -->
     <v-dialog v-model="configDialog" max-width="600">
       <v-card class="dialog-card">
         <v-card-title class="dialog-header">
@@ -323,6 +324,7 @@
           </v-btn>
           <v-spacer></v-spacer>
           <v-btn 
+            v-if="this.user.permissions.includes('CUAP')"
             color="primary" 
             @click="saveConfig"
             variant="flat"
@@ -333,15 +335,40 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
+    <delete-confirmation-dialog
+      v-model:show="deleteAgendaDialog"
+      :entity="selectedAgenda"
+      :entity-name="'de la agenda'"
+      @confirm="deleteAgenda(selectedAgenda.id)"
+    ></delete-confirmation-dialog>
+
+    <delete-confirmation-dialog
+      v-model:show="deleteColorDialog"
+      :entity="selectedColor"
+      :entity-name="'del color'"
+      @confirm="deleteColor(selectedColor.id)"
+    ></delete-confirmation-dialog>
   </v-container>
+
+  <v-progress-circular
+      v-else
+      indeterminate
+      color="primary"
+      size="64"
+      class="loading-spinner"
+    />
 </template>
 
 <script>
 import api from '@/plugins/axios';
-import { mapActions } from 'vuex';
+import { mapActions, mapState } from 'vuex';
+import { useNotification } from "@kyvg/vue3-notification";
+import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog.vue';
 
 export default {
   name: 'application-view',
+  components: { DeleteConfirmationDialog },
   data() {
     return {
       agendas: [],
@@ -353,6 +380,9 @@ export default {
       configDialog: false,
       isEditAgenda: false,
       isEditColor: false,
+      dataLoaded: false,
+      deleteAgendaDialog: false,
+      deleteColorDialog: false,
       selectedAgenda: this.emptyAgenda(),
       selectedColor: this.emptyColor(),
       selectedConfig: this.emptyConfig(),
@@ -363,13 +393,26 @@ export default {
       ]
     }
   },
+  setup() {
+    const { notify } = useNotification();
+    return { notify };
+  },
   computed: {
+    ...mapState(['user']),
     getColorsByType() {
       return (typeId) => this.colors.filter(c => c.typeId === typeId);
     }
   },
   methods: {
     ...mapActions(['logout']),
+    confirmDeleteAgenda(agenda){
+      this.selectedAgenda = agenda;
+      this.deleteAgendaDialog = true;
+    },
+    confirmDeleteColor(color){
+      this.selectedColor = color;
+      this.deleteColorDialog = true;
+    },
     emptyAgenda() {
       return {
         id: null,
@@ -397,14 +440,24 @@ export default {
       }
     },
     openAgendaDialog(agenda) {
-      this.isEditAgenda = !!agenda;
-      this.selectedAgenda = agenda ? {...agenda} : this.emptyAgenda();
-      this.agendaDialog = true;
+      if(this.user.permissions.includes('CUAG')){
+        this.isEditAgenda = !!agenda;
+        this.selectedAgenda = agenda ? {...agenda} : this.emptyAgenda();
+        this.agendaDialog = true;
+      }
+      else{
+        this.agendaDialog = false;
+      }
     },
     openColorDialog(type, color) {
-      this.isEditColor = !!color;
-      this.selectedColor = color ? {...color} : {...this.emptyColor(), typeId: type.id};
-      this.colorDialog = true;
+      if(this.user.permissions.includes('CUCO')){
+        this.isEditColor = !!color;
+        this.selectedColor = color ? {...color} : {...this.emptyColor(), typeId: type.id};
+        this.colorDialog = true;
+      }
+      else{
+        this.colorDialog = false;
+      }
     },
     openConfigDialog(config) {
       this.selectedConfig = { ...config };
@@ -415,9 +468,26 @@ export default {
       if (!this.$refs.configForm.validate()) return;
       
       try {
-        await api.post('/api/AppAdministration/appConfigs', this.selectedConfig);
-        await this.fetchConfigs();
-        this.configDialog = false;
+        const response = await api.post('/api/AppAdministration/appConfigs', this.selectedConfig);
+        if(!response.data.success) {
+            this.notify({
+              title: 'Error',
+              text: 'Error al actualizar las configuraciones del sistema.',
+              type: 'error',
+              duration: 2000
+            });
+            console.error(response.data?.message);
+        }
+        else{
+          this.notify({
+              title: 'Éxito',
+              text: 'Configuración actualizada correctamente.',
+              type: 'success',
+              duration: 2000
+          });
+          await this.fetchConfigs();
+          this.configDialog = false;
+        }
       } catch (error) {
         console.error('Error saving config:', error);
         this.handleError(error);
@@ -425,12 +495,47 @@ export default {
     },
     async saveAgenda() {
       if (!this.$refs.agendaForm.validate()) return;
-      
+      let response = '';
+
       try {
         if (this.isEditAgenda) {
-          await api.post('/api/AppAdministration/agendas', this.selectedAgenda);
+          response = await api.post('/api/AppAdministration/agendas', this.selectedAgenda);
+          if(!response.data.success) {
+            this.notify({
+              title: 'Error',
+              text: 'Error al editar la agenda.',
+              type: 'error',
+              duration: 2000
+            });
+            console.error(response.data?.message);
+          }
+          else{
+            this.notify({
+              title: 'Éxito',
+              text: 'Agenda editada correctamente.',
+              type: 'success',
+              duration: 2000
+            });
+          }
         } else {
-          await api.put('/api/AppAdministration/agendas', this.selectedAgenda);
+          response = await api.put('/api/AppAdministration/agendas', this.selectedAgenda);
+          if(!response.data.success) {
+            this.notify({
+              title: 'Error',
+              text: 'Error al crear la agenda.',
+              type: 'error',
+              duration: 2000
+            });
+            console.error(response.data?.message);
+          }
+          else{
+            this.notify({
+              title: 'Éxito',
+              text: 'Agenda creada correctamente.',
+              type: 'success',
+              duration: 2000
+            });
+          }
         }
         this.fetchAgendas();
         this.agendaDialog = false;
@@ -441,12 +546,47 @@ export default {
     },
     async saveColor() {
       if (!this.$refs.colorForm.validate()) return;
+      let response = '';
 
       try {
         if (this.isEditColor) {
-          await api.post('/api/AppAdministration/colors', this.selectedColor);
+          response = await api.post('/api/AppAdministration/colors', this.selectedColor);
+          if(!response.data.success) {
+            this.notify({
+              title: 'Error',
+              text: 'Error al editar el color.',
+              type: 'error',
+              duration: 2000
+            });
+            console.error(response.data?.message);
+          }
+          else{
+            this.notify({
+              title: 'Éxito',
+              text: 'Color editado correctamente.',
+              type: 'success',
+              duration: 2000
+            });
+          }
         } else {
-          await api.put('/api/AppAdministration/colors', this.selectedColor);
+          response = await api.put('/api/AppAdministration/colors', this.selectedColor);
+          if(!response.data.success) {
+            this.notify({
+              title: 'Error',
+              text: 'Error al crear el color.',
+              type: 'error',
+              duration: 2000
+            });
+            console.error(response.data?.message);
+          }
+          else{
+            this.notify({
+              title: 'Éxito',
+              text: 'Color creado correctamente.',
+              type: 'success',
+              duration: 2000
+            });
+          }
         }
         this.fetchColors();
         this.colorDialog = false;
@@ -456,10 +596,25 @@ export default {
       }
     },
     async deleteAgenda(id) {
-      if (!confirm('¿Estás seguro de eliminar esta agenda?')) return;
-      
       try {
-        await api.delete(`/api/AppAdministration/agendas?agendaId=${id}`);
+        const response = await api.delete(`/api/AppAdministration/agendas?agendaId=${id}`);
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al eliminar la agenda. posiblemente tenga datos asociados.',
+            type: 'error',
+            duration: 5000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.notify({
+            title: 'Éxito',
+            text: 'Agenda eliminada correctamente.',
+            type: 'success',
+            duration: 2000
+          });
+        }
         this.fetchAgendas();
       } catch (error) {
         console.error('Error deleting agenda:', error);
@@ -467,10 +622,25 @@ export default {
       }
     },
     async deleteColor(id) {
-      if (!confirm('¿Estás seguro de eliminar este color?')) return;
-      
       try {
-        await api.delete(`/api/AppAdministration/colors?colorPaletteId=${id}`);
+        const response = await api.delete(`/api/AppAdministration/colors?colorPaletteId=${id}`);
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al eliminar el color. posiblemente tenga datos asociados.',
+            type: 'error',
+            duration: 5000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.notify({
+            title: 'Éxito',
+            text: 'Color eliminado correctamente.',
+            type: 'success',
+            duration: 2000
+          });
+        }
         this.fetchColors();
       } catch (error) {
         console.error('Error deleting color:', error);
@@ -478,14 +648,31 @@ export default {
       }
     },
     handleError(error) {
-      if (error.response?.status === 401) {
+      if (error.status === 401) {
         this.logout();
       }
+      this.notify({
+        title: 'Error',
+        text: error.message ||'Error al procesar la peticion.',
+        type: 'error',
+        duration: 2000
+      });
     },
     async fetchAgendas() {
       try {
         const response = await api.get('/api/AppAdministration/agendas');
-        this.agendas = response.data?.data || [];
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al obtener las agendas.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.agendas = response.data?.data || [];
+        }
       } catch (error) {
         console.error('Error fetching agendas:', error);
         this.handleError(error);
@@ -494,7 +681,18 @@ export default {
     async fetchColors() {
       try {
         const response = await api.get('/api/AppAdministration/colors');
-        this.colors = response.data?.data || [];
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al obtener los colores.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.colors = response.data?.data || [];
+        }
       } catch (error) {
         console.error('Error fetching colors:', error);
         this.handleError(error);
@@ -503,7 +701,18 @@ export default {
     async fetchColorTypes() {
       try {
         const response = await api.get('/api/AppAdministration/types');
-        this.types = response.data?.data || [];
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al obtener los tipo de colores.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.types = response.data?.data || [];
+        }
       } catch (error) {
         console.error('Error fetching types:', error);
         this.handleError(error);
@@ -512,18 +721,33 @@ export default {
     async fetchConfigs() {
       try {
         const response = await api.get('/api/AppAdministration/appConfigs');
-        this.appConfigs = response.data?.data || [];
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al obtener las configuraciones del sistema.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.appConfigs = response.data?.data || [];
+        }
       } catch (error) {
         console.error('Error fetching app configs:', error);
         this.handleError(error);
       }
     },
   },
-  mounted() {
-    this.fetchAgendas();
-    this.fetchColors();
-    this.fetchColorTypes();
-    this.fetchConfigs();
+  async mounted() {
+    if(!this.user.permissions.includes('CSMAV')){
+      this.logout();
+    }
+    await this.fetchAgendas();
+    await this.fetchColors();
+    await this.fetchColorTypes();
+    await this.fetchConfigs();
+    this.dataLoaded = true;
   }
 };
 </script>

@@ -32,6 +32,7 @@
 <script>
 import { mapActions, mapState } from 'vuex';
 import api from '@/plugins/axios';
+import { useNotification } from "@kyvg/vue3-notification";
 
 export default {
   name: 'MainLayout',
@@ -43,26 +44,56 @@ export default {
       menuItems: [],
     };
   },
+  setup() {
+    const { notify } = useNotification();
+    return { notify };
+  },
   methods: {
     ...mapActions(['logout']),
     async cerrarSesion() {
       try {
         await this.logout();
+        this.notify({
+          title: 'Sesión cerrada',
+          text: 'Has cerrado sesión correctamente.',
+          type: 'success',
+          duration: 2000
+        });
         this.$router.push({ path: '/login', query: { redirected: true } });
       } catch (error) {
-        console.error('Error al cerrar sesión:', error);
-        alert('Ocurrió un error al cerrar la sesión');
+        this.notify({
+          title: 'Error',
+          text: 'Error al cerrar sesión.',
+          type: 'error',
+          duration: 2000
+        });
       }
     },
     fetchMenu() {
       api.get('/api/Home')
         .then(response => {
           this.menuItems = response.data?.data || [];
+          if(!response.data.success) {
+            this.notify({
+              title: 'Error',
+              text: response.data?.message ||'Error al cargar el menú.',
+              type: 'error',
+              duration: 2000
+            });
+          }
         })
         .catch(error => {
           console.error('Error fetching menu:', error);
-          if (error.response.status === 401) {
+          if (error.status === 401) {
             this.logout();
+          }
+          else {
+            this.notify({
+              title: 'Error',
+              text: error.data?.message ||'Error al cargar el menú.',
+              type: 'error',
+              duration: 2000
+            });
           }
         });
     }
@@ -71,6 +102,9 @@ export default {
     ...mapState(['user'])
   },
   mounted() {
+    if(!this.user.permissions.includes("CSHV")){
+      this.logout();
+    }
     this.fetchMenu();
     this.fullName = `${this.user?.firstName || ''} ${this.user?.lastName || ''}`.trim();
   }
@@ -78,12 +112,6 @@ export default {
 </script>
 
 <style scoped>
-.notification-card {
-  width: 500px !important;
-  top: 10px !important;
-  right: 10px !important;
-  font-size: 20px !important;
-}
 .custom-app-bar {
   background: linear-gradient(90deg, rgb(var(--v-theme-primary)) 0%, transparent 250%) !important;
 }

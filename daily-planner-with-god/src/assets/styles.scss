@@ -487,3 +487,21 @@ $hover-animation-speed: 1.5s;
 .config-view {
     background: linear-gradient(45deg, #f8f9fa 0%, #e9ecef 100%) !important;
 }
+
+.notification-card {
+    width: 300px !important;
+    top: 80px !important;
+    right: 10px !important;
+    font-size: 20px !important;
+  }
+
+  .vue-notification-wrapper{
+    width: 310px !important;
+  }
+
+  .loading-spinner {
+    position: absolute !important;
+    left: 50%;
+    top: 30%;
+    transform: translate(-50%, -50%);
+  }
