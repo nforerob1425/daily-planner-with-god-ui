@@ -31,6 +31,7 @@
 
 <script>
 import { mapActions, mapState } from 'vuex';
+import api from '@/plugins/axios';
 
 export default {
   name: 'MainLayout',
@@ -39,17 +40,7 @@ export default {
       menuVisible: false,
       drawer: true,
       fullName: '',
-      menuItems: [
-        { title: 'Inicio', icon: 'mdi-home', route: '/home' },
-        { title: 'Mi R07', icon: 'mdi-book-variant', route: '/planner' },
-        { title: 'Peticiones de oración', icon: 'mdi-clipboard-text', route: '/petitions' },
-        { title: 'Perfil', icon: 'mdi-account', route: '/profile' },
-        { title: 'Configuración', icon: 'mdi-cog', route: '/configuration' },
-        { title: 'Solicitudes', icon: 'mdi-gmail', route: '/contact' },
-        { title: 'Usuarios', icon: 'mdi-account-multiple-plus', route: '/users' },
-        { title: 'Dashboard', icon: 'mdi-view-dashboard', route: '/dashboard' },
-        { title: 'Admin. Aplicación', icon: 'mdi-application', route: '/application' },
-      ],
+      menuItems: [],
     };
   },
   methods: {
@@ -62,12 +53,25 @@ export default {
         console.error('Error al cerrar sesión:', error);
         alert('Ocurrió un error al cerrar la sesión');
       }
+    },
+    fetchMenu() {
+      api.get('/api/Home')
+        .then(response => {
+          this.menuItems = response.data?.data || [];
+        })
+        .catch(error => {
+          console.error('Error fetching menu:', error);
+          if (error.response.status === 401) {
+            this.logout();
+          }
+        });
     }
   },
   computed: {
     ...mapState(['user'])
   },
   mounted() {
+    this.fetchMenu();
     this.fullName = `${this.user?.firstName || ''} ${this.user?.lastName || ''}`.trim();
   }
 };

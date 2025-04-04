@@ -330,6 +330,9 @@
           @update:model-value="loadRolePermissions"
         ></v-select>
 
+        <v-icon color="primary">mdi-information-outline</v-icon>
+        <span class="ml-2">Algunas acciones requieren que tengas mas de un permiso asignado</span>
+
         <v-table density="comfortable" fixed-header height="500px" v-if="selectedRole != null">
           <thead>
             <tr>
@@ -339,7 +342,7 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="permission in permissions" :key="permission.id">
+            <tr v-for="permission in permissions" :key="permission.id" :class="`bg-${setBackgroundColor(permission.priority)}`">
               <td>{{ permission.systemName }}</td>
               <td>{{ permission.description }}</td>
               <td>
@@ -456,7 +459,13 @@ export default {
     async fetchPermissions() {
       try {
         const response = await api.get('/api/Permission');
-        this.permissions = response.data.data;
+        this.permissions = response.data.data.sort((a, b) =>
+        { 
+          if (a.priority !== b.priority) {
+            return a.priority - b.priority; 
+          }
+          return a.description.localeCompare(b.description)
+        });
       } catch (error) {
         console.error('Error fetching items:', error);
         if (error.response.status === 401) {
@@ -539,6 +548,22 @@ export default {
         ...u,
         combinedName: `${u.firstName} ${u.lastName}`
       }));
+    },
+
+    setBackgroundColor(priority) {
+      switch (priority) {
+        case 1:
+          return 'blue-lighten-4';
+        case 2:
+          return 'cyan-lighten-4';
+        case 3:
+          return 'green-lighten-4';
+        case 4:
+          return 'amber-lighten-4';
+        default:
+          return 'grey';
+      }
+      
     },
 
     searchLeads(search) {

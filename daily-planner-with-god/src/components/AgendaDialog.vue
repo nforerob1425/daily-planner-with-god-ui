@@ -46,7 +46,7 @@
               fab
               dark
               color="deep-orange-lighten-1"
-              class="floating-notes-btn"
+              class="floating-reported-btn"
               @click.stop="notesDialog = true"
             />
           </template>
@@ -97,7 +97,7 @@
               fab
               dark
               color="green"
-              class="floating-reported-btn"
+              class="floating-notes-btn"
               @click="reportPlanner"
             />
           </template>
