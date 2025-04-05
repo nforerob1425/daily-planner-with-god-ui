@@ -165,7 +165,7 @@
                 v-for="(type, index) in filteredPetitionTypes"
                 :key="index"
                 :class="index < 3 ? 'font-weight-bold' : ''"
-                class="list-item-hover"
+                class="list-item-hover ml-5 mr-5"
               >
                 <template v-slot:prepend>
                   <v-icon :color="chartColors[index]">mdi-circle-small</v-icon>
@@ -204,7 +204,7 @@
                   :value="value"
                   color="purple"
                   small
-                  class="animate__zoomIn"
+                  class="animate__zoomIn stats-grid-hover"
                 />
               </v-col>
             </v-row>
@@ -223,22 +223,31 @@
           </v-card-title>
           <v-card-text>
             <v-row class="pa-5">
-              <v-col cols="6">
+              <v-col cols="4">
                 <stat-card 
                   icon="mdi-calendar" 
                   title="Agendas" 
                   :value="totalAgendas"
                   color="orange"
-                  class="animate__zoomIn"
+                  class="animate__zoomIn stats-grid-hover"
                 />
               </v-col>
-              <v-col cols="6">
+              <v-col cols="4">
                 <stat-card 
                   icon="mdi-advertisements" 
                   title="Anuncios" 
                   :value="totalAds"
                   color="cyan"
-                  class="animate__zoomIn"
+                  class="animate__zoomIn stats-grid-hover"
+                />
+              </v-col>
+              <v-col cols="4">
+                <stat-card 
+                  icon="mdi-note-text" 
+                  title="Notas" 
+                  :value="totalNotes"
+                  color="purple"
+                  class="animate__zoomIn stats-grid-hover"
                 />
               </v-col>
             </v-row>
@@ -307,6 +316,7 @@ export default {
     roles() { return this.dashboardData?.roles || {} },
     totalAgendas() { return this.dashboardData?.totalAgendas || 0 },
     totalAds() { return this.dashboardData?.totalAds || 0 },
+    totalNotes() { return this.dashboardData?.totalNotes || 0 },
     userStats() {
       return [
         { icon: 'mdi-sheep', title: 'Ovejas', value: this.users.sheeps, color: 'orange' },
@@ -480,8 +490,8 @@ export default {
 
 .stats-grid-hover:hover {
   background: rgba(33, 150, 243, 0.05) !important;
-  transform: translateX(10px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  transform: translateX(5px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 .list-item-hover {
