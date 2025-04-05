@@ -23,7 +23,7 @@
           icon="mdi-alert"
         >
           <span v-if="entityName == 'usuario'">
-            Esta acción eliminará permanentemente <b>TODOS</b> los datos asociados al usuario (Tarjetas, Notas, Anuncios).
+            Esta acción eliminará permanentemente <b>TODOS</b> los datos asociados al usuario (Tarjetas, Notas, Anuncios) y si es lider se desacoplará de sus ovejas.
           </span>
           <span v-else>
             Esta accion eliminará permanentemente los datos {{ this.entityName }}.

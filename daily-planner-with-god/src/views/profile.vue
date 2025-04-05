@@ -1,11 +1,9 @@
 <template>
-  <v-container class="fill-height config-view " fluid>
+  <v-container class="fill-height config-view " fluid v-if="dataLoaded">
     <v-row justify="center" class="ma-4">
       <v-col cols="12" md="10" lg="8">
-        <!-- Tarjeta principal con animación de entrada -->
         <v-fade-transition>
           <v-card v-if="profileDetails" class="profile-card pa-6 rounded-xl elevation-12">
-            <!-- Encabezado con efecto de onda -->
             <v-slide-y-reverse-transition>
               <v-row 
                 align="center" 
@@ -34,9 +32,9 @@
               </v-row>
             </v-slide-y-reverse-transition>
 
-            <!-- Botón de cambiar contraseña -->
             <v-slide-y-transition>
               <v-btn 
+                v-if="this.user.permissions.includes('CUPS')"
                 color="blue darken-2" 
                 class="mt-4 pulse" 
                 @click="showPasswordDialog = true"
@@ -100,7 +98,6 @@
 
             <!-- Contenido principal -->
             <v-card-text>
-              <!-- Información principal con animaciones escalonadas -->
               <v-row class="mb-6 info-section">
                 <v-col cols="12" md="6">
                   <v-slide-x-transition>
@@ -134,7 +131,7 @@
 
                 <v-col cols="12" md="6">
                   <v-slide-x-reverse-transition>
-                    <div class="d-flex align-center mb-4 info-item glow-on-hover">
+                    <div class="d-flex align-center mb-4 info-item glow-on-hover" v-if="this.user.permissions.includes('CSCN')">
                       <v-icon color="teal" large class="mr-3 pulse">mdi-cog</v-icon>
                       <div>
                         <div class="text-caption text-uppercase text-teal">Configuración</div>
@@ -146,7 +143,7 @@
                   <!-- Sección Lead con animación especial -->
                   <v-fade-transition>
                     <v-card 
-                      v-if="hasLead"
+                      v-if="hasLead && this.user.permissions.includes('CSUS')"
                       class="mt-4 pa-4 rounded-lg lead-section neon-border"
                     >
                       <div class="d-flex align-center mb-2">
@@ -191,7 +188,7 @@
 
               <!-- Estadísticas con animación de escalado -->
               <v-row class="mb-6 stats-container">
-                <v-col cols="12" md="4">
+                <v-col cols="12" md="4" v-if="this.user.permissions.includes('CSCD')">
                     <v-card elevation="3"
                       class="stat-card primary-gradient pa-4 rounded-lg scale-in"
                     >
@@ -200,7 +197,7 @@
                     </v-card>
                 </v-col>
                 
-                <v-col cols="12" md="4" v-if="totalCardsReported > 0">
+                <v-col cols="12" md="4" v-if="totalCardsReported > 0 && this.user.permissions.includes('CSCD')">
                     <v-card elevation="3"
                       class="stat-card error-gradient pa-4 rounded-lg scale-in-delay"
                     >
@@ -211,64 +208,68 @@
               </v-row>
 
               <!-- Sección de Favoritos -->
-              <section v-if="showFavorites" class="mb-8">
-              <h2 class="text-h4 mb-4 primary--text slide-in-left">⭐ Tarjetas Favoritas</h2>
-              <v-row>
-                  <v-col 
-                  v-for="(card, index) in favoriteCards" 
-                  :key="card.id" 
-                  cols="12" 
-                  md="6"
-                  >
-                  <v-slide-y-transition :delay="index * 100">
-                      <v-card 
-                      class="custom-card hover-3d"
-                      :style="{
-                          backgroundColor: card.primaryColor,
-                          color: card.letterColor
-                      }"
-                      >
-                      <div class="card-header">
-                          <div class="date-badge">
-                          <div class="month" :style="{ color: card.letterDateColor }">
-                              {{ card.monthCreated + `-` + card.createDate }}
-                          </div>
-                          <div 
-                              class="day"
-                              :style="{
-                              backgroundColor: card.primaryColorDate,
-                              color: card.letterDateColor
-                              }"
-                          >
-                              {{ card.dayCreated }}
-                          </div>
-                          </div>
-                      </div>
+              <section v-if="showFavorites && this.user.permissions.includes('CSCD')" class="mb-8">
+                <h2 class="text-h4 mb-4 primary--text slide-in-left">⭐ Tarjetas Favoritas</h2>
+                <v-row>
+                    <v-col 
+                    v-for="(card, index) in favoriteCards" 
+                    :key="card.id" 
+                    cols="12" 
+                    md="6"
+                    >
+                    <v-slide-y-transition :delay="index * 100">
+                        <v-card 
+                        class="custom-card hover-3d"
+                        :style="{
+                            backgroundColor: card.primaryColor,
+                            color: card.letterColor
+                        }"
+                        >
+                        <div class="card-header">
+                            <div class="date-badge">
+                            <div class="month" :style="{ color: card.letterDateColor }">
+                                {{ card.monthCreated + `-` + card.createDate }}
+                            </div>
+                            <div 
+                                class="day"
+                                :style="{
+                                backgroundColor: card.primaryColorDate,
+                                color: card.letterDateColor
+                                }"
+                            >
+                                {{ card.dayCreated }}
+                            </div>
+                            </div>
+                        </div>
 
-                      <div class="card-content">
-                          <div class="card-title">
-                          <span class="title-text" :style="{ color: card.titleColor }">
-                              {{ card.title }}
-                          </span>
-                          </div>
-                          
-                          <div class="content">
-                          {{ card.content }}
-                          </div>
+                        <div class="card-content">
+                            <div class="card-title">
+                            <span class="title-text" :style="{ color: card.titleColor }">
+                                {{ card.title }}
+                            </span>
+                            </div>
+                            
+                            <div class="content">
+                            {{ card.content }}
+                            </div>
 
-                          <div v-if="card.versicle" class="versicle">
-                          <v-icon small :color="card.titleColor">mdi-book</v-icon>
-                          <span>{{ card.versicle }}</span>
-                          </div>
-                      </div>
-                      </v-card>
-                  </v-slide-y-transition>
-                  </v-col>
-              </v-row>
+                            <div v-if="card.versicle" class="versicle">
+                            <v-icon small :color="card.titleColor">mdi-book</v-icon>
+                            <span>{{ card.versicle }}</span>
+                            </div>
+                        </div>
+                        </v-card>
+                    </v-slide-y-transition>
+                    </v-col>
+                </v-row>
+                <div v-if="favoriteCards.length === 0" class="text-center mt-4 text-body-1">
+                  <v-icon color="primary">mdi-information-outline</v-icon>
+                  <span class="ml-2">No tienes tarjetas marcadas como favoritas</span>
+                </div>
               </section>
 
               <!-- Sección de Peticiones -->
-              <section v-if="showPetitions" class="mb-8">
+              <section v-if="showPetitions && this.user.permissions.includes('CSPT')" class="mb-8">
                 <h2 class="text-h4 mb-4 primary--text slide-in-left-delay">📋 Peticiones Reportadas</h2>
                 <v-slide-y-transition group>
                   <v-card
@@ -295,6 +296,7 @@
                       <v-tooltip text="Tooltip" location="top">
                         <template v-slot:activator="{ props }">
                           <v-btn
+                            v-if="this.user.permissions.includes('CUPT')"
                             v-bind="props"
                             icon
                             @click="togglePraying(petition)"
@@ -333,6 +335,13 @@
       </v-col>
     </v-row>
   </v-container>
+  <v-progress-circular
+      v-else
+      indeterminate
+      color="primary"
+      size="64"
+      class="loading-spinner"
+    />
 </template>
 
 <script>
@@ -344,6 +353,7 @@ export default {
   name: 'ProfileView',
   data() {
     return {
+      dataLoaded: false,
       profileDetails: null,
       showPasswordDialog: false,
       newPassword: '',
@@ -354,24 +364,6 @@ export default {
   setup() {
     const { notify } = useNotification();
     return { notify };
-  },
-  async created() {
-    try {
-      const response = await api.get(`/api/Login/${this.user.id}`);
-      this.profileDetails = response.data.data;
-    } catch (error) {
-      if (error.response?.status === 401) {
-        this.logout();
-      }
-      else{
-        this.notify({
-          title: 'Error',
-          text: 'Error al cargar el perfil',
-          type: 'error',
-          duration: 5000
-        });
-      }
-    }
   },
   computed: {
     ...mapState(['user']),
@@ -436,6 +428,34 @@ export default {
   },
   methods: {
     ...mapActions(['logout']),
+    async fetchProfileDetails(){
+      try {
+        const response = await api.get(`/api/Login/${this.user.id}`);
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al cargar la info del perfil.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.profileDetails = response.data.data;
+        }
+      } 
+      catch (error) {
+        if (error.status === 401) {
+          this.logout();
+        }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la peticion.',
+          type: 'error',
+          duration: 2000
+        });
+      }
+    },
     async changePassword() {
       try {
         const payload = {
@@ -444,23 +464,33 @@ export default {
         };
         
         const response = await api.post('/api/Password', payload);
-        this.notify({
-            title: 'Success',
-            text: response.data?.message || '',
-            type: 'success',
-            duration: 5000
-          });      
-      } catch (error) {
-        if (error.response?.status === 401) {
-          this.logout();
-        } else {
+        if(!response.data.success) {
           this.notify({
             title: 'Error',
-            text: error.response?.data?.Message || 'Error al guardar',
+            text: 'Error al cambiar la contraseña.',
             type: 'error',
-            duration: 5000
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.notify({
+            title: 'Éxito',
+            text: 'Contraseña cambiada con éxito.',
+            type: 'success',
+            duration: 2000
           });
         }
+      } catch (error) {
+        if (error.status === 401) {
+          this.logout();
+        }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la peticion.',
+          type: 'error',
+          duration: 2000
+        });
       }
 
       this.showPasswordDialog = false
@@ -492,30 +522,45 @@ export default {
       try {
         petition.isPraying = !petition.isPraying;
         const response = await api.patch(`/api/petitions?petitionId=${petition.id}`);
-        this.notify({
-          title: 'Éxito',
-          text: 'Estado de oración actualizada',
-          type: 'success',
-          duration: 3000
-        });
-        
-        return response.data;
-      } catch (error) {
-        petition.isPraying = originalState;
-        if (error.response?.status === 401) {
-          this.logout();
-        }else{
+        if(!response.data.success) {
           this.notify({
             title: 'Error',
-            text: 'No se pudo actualizar el estado de oración',
+            text: 'Error al cambiar de estado la petición.',
             type: 'error',
-            duration: 5000
+            duration: 2000
           });
+          console.error(response.data?.message);
+          petition.isPraying = originalState;
         }
-        console.error('Error actualizando estado:', error);
-        throw error;
+        else{
+          this.notify({
+            title: 'Éxito',
+            text: petition.isPraying ? 'Orando por la petición.' : 'Dejaste de orar por la petición.',
+            type: 'success',
+            duration: 2000
+          });
+          return response.data;
+        }
+      } catch (error) {
+        petition.isPraying = originalState;
+        if (error.status === 401) {
+          this.logout();
+        }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la peticion.',
+          type: 'error',
+          duration: 2000
+        });
       }
     }
+  },
+  async mounted() {
+    if(!this.user.permissions.includes('CSPRV')){
+      this.logout();
+    }
+    await this.fetchProfileDetails();
+    this.dataLoaded = true;
   }
 };
 </script>
@@ -778,4 +823,4 @@ export default {
     right: 12px;
     top: 15px;
 }
-  </style>
+</style>

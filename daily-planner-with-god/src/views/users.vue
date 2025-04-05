@@ -1,8 +1,8 @@
 <template>
-  <v-container fluid class="animated-container config-view">
+  <v-container fluid class="animated-container config-view" v-if="dataLoaded">
     <!-- Sección de Listado -->
     <v-row>
-      <v-col cols="12" class="ml-9 mr-9 mt-9">
+      <v-col cols="12" class="ml-9 mr-9 mt-9" v-if="this.user.permissions.includes('CSUS')">
         <v-card elevation="4" class="rounded-lg mb-4 floating-card">
           <v-card-title class="bg-primary pa-4 header-gradient">
             <v-icon color="white" class="mr-3 pb-3">mdi-account-multiple</v-icon>
@@ -24,6 +24,7 @@
               </v-col>
               <v-col cols="12">
                 <v-btn
+                  v-if="this.user.permissions.includes('CCUS')"
                   color="secondary"
                   prepend-icon="mdi-plus"
                   variant="tonal"
@@ -75,6 +76,7 @@
 
                         <template v-slot:append>
                           <v-btn
+                            v-if="this.user.permissions.includes('CDUS')"
                             icon
                             color="error"
                             variant="text"
@@ -106,7 +108,7 @@
     </v-row>
 
     <!-- Sección de Formulario -->
-    <v-row>
+    <v-row v-if="this.user.permissions.includes('CCUS') || this.user.permissions.includes('CUUS')">
       <v-col cols="12" class="ml-9 mr-9 mb-9">
         <v-slide-y-transition>
           <v-card elevation="4" class="rounded-lg floating-card" ref="formCard">
@@ -281,7 +283,6 @@
       </v-col>
     </v-row>
 
-    <!-- Diálogo de Confirmación -->
     <delete-confirmation-dialog
       v-model:show="deleteDialog"
       :entity="selectedUser"
@@ -289,33 +290,32 @@
       @confirm="deleteUser"
     ></delete-confirmation-dialog>
 
-    <v-snackbar
-      v-model="snackbar.show"
-      :color="snackbar.color"
-      location="bottom right"
-      :timeout="3000"
+    <v-btn
+      v-if="this.user.permissions.includes('CCTP') && this.user.permissions.includes('CDTP')"
+      icon
+      color="secondary"
+      fab
+      dark
+      right
+      class="floating-permission-btn"
+      @click="permissionsDialog = true"
     >
-      {{ snackbar.message }}
-    </v-snackbar>
+      <v-icon>mdi-shield-account</v-icon>
+    </v-btn>
   </v-container>
 
-  <v-btn
-    icon
-    color="secondary"
-    fab
-    dark
-    right
-    class="floating-permission-btn"
-    @click="permissionsDialog = true"
-  >
-    <v-icon>mdi-shield-account</v-icon>
-  </v-btn>
-
-  <!-- Diálogo de permisos -->
+  <v-progress-circular
+      v-else
+      indeterminate
+      color="primary"
+      size="64"
+      class="loading-spinner"
+    />
+  
   <v-dialog v-model="permissionsDialog" max-width="800" scrollable>
     <v-card rounded="lg">
       <v-card-title class="bg-primary pa-4 header-gradient">
-        <v-icon color="white" class="mr-3">mdi-shield-cog</v-icon>
+        <v-icon color="white" class="mr-3">mdi-shield-account</v-icon>
         <span class="text-h5 text-white">Administrar Permisos Temporales</span>
       </v-card-title>
 
@@ -330,11 +330,28 @@
           return-object
           @update:model-value="loadRolePermissions"
         ></v-select>
+        <v-alert
+         v-if="selectedRole == null"
+          type="info"
+          variant="tonal"
+          class="mt-4"
+          icon="mdi-information-outline">
+          <span>
+            Algunas acciones requieren que tengas mas de un permiso asignado
+          </span>
+        </v-alert>
+        <v-alert
+          type="warning"
+          variant="tonal"
+          class="mt-4"
+          icon="mdi-alert"
+        >
+          <span>
+            Tenga <b>MUCHO</b> cuidado al asignar/desasignar permisos, puede desajustar totalmente la aplicación.
+          </span>
+        </v-alert>
 
-        <v-icon color="primary">mdi-information-outline</v-icon>
-        <span class="ml-2">Algunas acciones requieren que tengas mas de un permiso asignado</span>
-
-        <v-table density="comfortable" fixed-header height="500px" v-if="selectedRole != null">
+        <v-table density="comfortable" fixed-header height="500px" v-if="selectedRole != null && this.user.permissions.includes('CSTP')">
           <thead>
             <tr>
               <th>Nombre en Sistema</th>
@@ -364,7 +381,8 @@
 </template>
 
 <script>
-import { mapActions } from 'vuex';
+import { useNotification } from "@kyvg/vue3-notification";
+import { mapActions, mapState } from 'vuex';
 import api from '@/plugins/axios';
 import DeleteConfirmationDialog from '@/components/DeleteConfirmationDialog.vue';
 
@@ -373,6 +391,7 @@ export default {
   components: { DeleteConfirmationDialog },
   data() {
     return {
+      dataLoaded: false,
       searchTerm: '',
       currentPage: 1,
       itemsPerPage: 10,
@@ -401,14 +420,14 @@ export default {
         leadId: null,
         isMale: true,
       },
-      snackbar: {
-        show: false,
-        message: '',
-        color: 'success',
-      },
     };
   },
+  setup() {
+    const { notify } = useNotification();
+    return { notify };
+  },
   computed: {
+    ...mapState(['user']),
     filteredUsers() {
       return this.users.filter(user => 
         `${user.firstName} ${user.lastName} ${user.username}`.toLowerCase().includes(this.searchTerm.toLowerCase()))
@@ -441,9 +460,6 @@ export default {
       };
     }
   },
-  async mounted() {
-    await this.initializeData();
-  },
   methods: {
     ...mapActions(['logout']),
     async initializeData() {
@@ -461,58 +477,130 @@ export default {
     async fetchPermissions() {
       try {
         const response = await api.get('/api/Permission');
-        this.permissions = response.data.data.sort((a, b) =>
-        { 
-          if (a.priority !== b.priority) {
-            return a.priority - b.priority; 
-          }
-          return a.description.localeCompare(b.description)
-        });
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al cargar los permisos.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.permissions = response.data.data.sort((a, b) =>
+          { 
+            if (a.priority !== b.priority) {
+              return a.priority - b.priority; 
+            }
+            return a.description.localeCompare(b.description)
+          });
+        }        
       } catch (error) {
-        console.error('Error fetching items:', error);
-        if (error.response.status === 401) {
+        if (error.status === 401) {
           this.logout();
         }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la peticion.',
+          type: 'error',
+          duration: 2000
+        });
        }
     },
 
     async fetchTemporalPermissions() {
       try {
         const response = await api.get('/api/TemporalPermission');
-        this.temporalPermissions = response.data.data;
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al cargar los permisos temporales.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.temporalPermissions = response.data.data;
+        }
       } catch (error) {
-        console.error('Error fetching items:', error);
-        if (error.response.status === 401) {
+        if (error.status === 401) {
           this.logout();
         }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la peticion.',
+          type: 'error',
+          duration: 2000
+        });
        }
     },
 
     async fetchUsers() {
       try {
         const response = await api.get('/api/Users');
-        this.users = response.data.data.map(user => ({
-          ...user,
-          role: this.roles.find(r => r.id === user.roleId),
-          combinedName: `${user.firstName} ${user.lastName}` // Nueva propiedad
-        }));
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al cargar los usuarios.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.users = response.data.data.map(user => ({
+            ...user,
+            role: this.roles.find(r => r.id === user.roleId),
+            combinedName: `${user.firstName} ${user.lastName}`
+          }));
+
+          this.users = this.users.sort((a, b) =>
+          { 
+            if (a.role.name !== b.role.name) {
+              return b.role.name.localeCompare(a.role.name)
+            }
+            return a.firstName.localeCompare(b.firstName)
+          });
+        }
       } catch (error) {
-        console.error('Error fetching items:', error);
-        if (error.response.status === 401) {
+        if (error.status === 401) {
           this.logout();
         }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la peticion.',
+          type: 'error',
+          duration: 2000
+        });
        }
     },
 
     async fetchRoles() {
       try {
         const response = await api.get('/api/Rol');
-        this.roles = response.data.data.sort((a, b) => a.scale - b.scale);
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al cargar los roles.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.roles = response.data.data.sort((a, b) => a.scale - b.scale);
+        }
       } catch (error) {
-        console.error('Error fetching items:', error);
-        if (error.response.status === 401) {
+        if (error.status === 401) {
           this.logout();
         }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la peticion.',
+          type: 'error',
+          duration: 2000
+        });
        }
     },
 
@@ -562,6 +650,8 @@ export default {
           return 'green-lighten-4';
         case 4:
           return 'amber-lighten-4';
+        case 5:
+          return 'red-lighten-4';
         default:
           return 'grey';
       }
@@ -601,6 +691,9 @@ export default {
     },
 
     selectUser(user) {
+      if(!this.user.permissions.includes('CUUS')){
+        return;
+      }
       this.$nextTick(() => {
         if (this.$refs.formCard?.$el) {
           this.$refs.formCard.$el.scrollIntoView({
@@ -662,14 +755,35 @@ export default {
 
     async deleteUser() {
       try {
-        await api.delete(`/api/Users/${this.selectedUser.id}`);
-        this.showSuccess('Usuario eliminado exitosamente');
-        await this.fetchUsers();
+        const response = await api.delete(`/api/Users/${this.selectedUser.id}`);
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: 'Error al eliminar el usuario.',
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        }
+        else{
+          this.notify({
+            title: 'Éxito',
+            text: 'Usuario eliminado correctamente.',
+            type: 'success',
+            duration: 2000
+          });
+          await this.fetchUsers();
+        }
       } catch (error) {
-        console.error('Error fetching items:', error);
-        if (error.response.status === 401) {
+        if (error.status === 401) {
           this.logout();
         }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la peticion.',
+          type: 'error',
+          duration: 2000
+        });
        } finally {
         this.deleteDialog = false;
         this.selectedUser = null;
@@ -685,16 +799,39 @@ export default {
           ...this.form,
         };
 
-        this.isEditing 
+        const response = this.isEditing 
           ? await api.put(`/api/Users/${this.form.id}`, payload)
           : await api.post('/api/Users', payload);
-        await this.fetchUsers();
-        this.clearForm();
+
+        if(!response.data.success) {
+          this.notify({
+            title: 'Error',
+            text: `Error al ${this.isEditing ? 'actualizar' : 'crear'} el usuario.`,
+            type: 'error',
+            duration: 2000
+          });
+          console.error(response.data?.message);
+        } 
+        else{
+          this.notify({
+            title: 'Éxito',
+            text: `Usuario ${this.isEditing ? 'actualizado' : 'creado'} correctamente.`,
+            type: 'success',
+            duration: 2000
+          });
+          await this.fetchUsers();
+          this.clearForm();
+        }
       } catch (error) {
-        console.error('Error fetching items:', error);
-        if (error.response.status === 401) {
+        if (error.status === 401) {
           this.logout();
         }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la peticion.',
+          type: 'error',
+          duration: 2000
+        });
        } finally {
         this.isSaving = false;
       }
@@ -702,7 +839,7 @@ export default {
 
     clearForm() {
       this.form = {
-        id: '',
+        id: null,
         username: '',
         firstName: '',
         lastName: '',
@@ -716,22 +853,6 @@ export default {
       this.$refs.form.resetValidation();
     },
 
-    showSuccess(message) {
-      this.snackbar = {
-        show: true,
-        message,
-        color: 'success'
-      };
-    },
-
-    showError(message) {
-      this.snackbar = {
-        show: true,
-        message,
-        color: 'error'
-      };
-    },
-
     isPermissionEnabled(permissionId) {
       if (!this.selectedRole) return false;
       return this.temporalPermissions.some(tp => 
@@ -743,24 +864,64 @@ export default {
     async togglePermission(permissionId, enabled) {
       try {
         if (enabled) {
-          await api.post('/api/TemporalPermission', {
+          const response = await api.post('/api/TemporalPermission', {
             roleId: this.selectedRole.id,
             permissionId: permissionId
           });
+          if(!response.data.success) {
+            this.notify({
+              title: 'Error',
+              text: 'Error al asignar el permiso temporal.',
+              type: 'error',
+              duration: 2000
+            });
+            console.error(response.data?.message);
+          }
+          else{
+            this.notify({
+              title: 'Éxito',
+              text: 'Permiso asignado correctamente.',
+              type: 'success',
+              duration: 2000
+            });
+          }
         } else {
           const tempPerm = this.temporalPermissions.find(tp => 
             tp.roleId === this.selectedRole.id && 
             tp.permissionId === permissionId
           );
           if (tempPerm) {
-            await api.delete(`/api/TemporalPermission/${tempPerm.id}`);
+            const response = await api.delete(`/api/TemporalPermission/${tempPerm.id}`);
+            if(!response.data.success) {
+              this.notify({
+                title: 'Error',
+                text: 'Error al desasignar el permiso temporal.',
+                type: 'error',
+                duration: 2000
+              });
+              console.error(response.data?.message);
+            }
+            else{
+              this.notify({
+                title: 'Éxito',
+                text: 'Permiso desasignado correctamente.',
+                type: 'success',
+                duration: 2000
+              });
+            }
           }
         }
-        this.showSuccess('Permiso actualizado correctamente');
         await this.fetchTemporalPermissions();
       } catch (error) {
-        console.error('Error updating permission:', error);
-        this.showError('Error al actualizar el permiso');
+        if (error.status === 401) {
+          this.logout();
+        }
+        this.notify({
+          title: 'Error',
+          text: error.message ||'Error al procesar la peticion.',
+          type: 'error',
+          duration: 2000
+        });
       }
     },
 
@@ -768,7 +929,15 @@ export default {
       // Forzar actualización de la tabla
       this.temporalPermissions = [...this.temporalPermissions];
     },
-  }
+  },
+  async mounted() {
+    if(!this.user.permissions.includes('CSUV')){
+      this.logout();
+    }
+
+    await this.initializeData();
+    this.dataLoaded = true;
+  },
 };
 </script>
 
